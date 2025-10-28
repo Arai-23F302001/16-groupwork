@@ -53,9 +53,7 @@ export default function PostsPage({ user }: { user: { name: string; email: strin
               <label className="text-sm text-gray-600">カテゴリ</label>
               <select className="w-full rounded-xl border px-3 py-2" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 {["教科書", "参考書"].map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
@@ -93,9 +91,7 @@ export default function PostsPage({ user }: { user: { name: string; email: strin
                   <h3 className="font-semibold leading-tight">{it.title}</h3>
                   <span className={`inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium ring-1 ${statusColor(it.status)}`}>{it.status}</span>
                 </div>
-                <div className="text-sm text-gray-500">
-                  {it.course}・{it.category}
-                </div>
+                <div className="text-sm text-gray-500">{it.course}・{it.category}</div>
                 <div className="text-xs text-gray-400">提供者：{it.owner}</div>
               </div>
             </div>

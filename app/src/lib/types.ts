@@ -18,8 +18,7 @@ export const seedItems: Item[] = [
     category: "教科書",
     status: "募集中",
     owner: "先輩A",
-    image:
-      "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=800&auto=format&fit=crop"
   },
   {
     id: "i2",
@@ -28,12 +27,11 @@ export const seedItems: Item[] = [
     category: "参考書",
     status: "募集中",
     owner: "先輩B",
-    image:
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop",
-  },
+    image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop"
+  }
 ];
 
 export const seedRewards: Reward[] = [
   { id: "r1", name: "学食券 300円", cost: 15 },
-  { id: "r2", name: "文具券 500円", cost: 25 },
+  { id: "r2", name: "文具券 500円", cost: 25 }
 ];
