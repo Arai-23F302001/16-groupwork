@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { SectionCard } from "../components/Ui";
+import { SectionCard } from "../../components/Ui";
 
 type Score = { name: string; score: number; ts: number };
 
