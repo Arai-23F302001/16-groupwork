@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SectionCard } from "../components/Ui";
+import { SectionCard } from "../../components/Ui";
 
 export default function AuthPage({
   onLogin,
