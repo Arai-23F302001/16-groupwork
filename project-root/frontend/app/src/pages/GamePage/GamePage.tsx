@@ -47,7 +47,7 @@ export default function GamePage({ user }: { user: { name: string; email: string
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [phase, score]); // eslint-disable-line
+  }, [phase]); // eslint-disable-line
 
   function start() {
     setScore(0);
