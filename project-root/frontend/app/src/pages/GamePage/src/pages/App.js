@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import Home from "./pages/Home";
-import Settings from "./pages/Settings";
+import Home from "./CookieClicker";
 import "./App.css";
 
 function App() {

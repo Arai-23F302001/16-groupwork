@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import TopBar from "./components/TopBar";
-import AuthPage from "./pages/controllers/AuthPage";
-import GamePage from "./pages/GamePage/GamePage";
-import PostsPage from "./pages/PostsPage";
+import TopBar from "../../components/TopBar";
+import AuthPage from "../controllers/AuthPage";
+import GamePage from "../GamePage/GamePage";
+import PostsPage from "./PostsPage";
 
 export default function App() {
   const [tab, setTab] = useState<"posts" | "game" | "auth">("posts");

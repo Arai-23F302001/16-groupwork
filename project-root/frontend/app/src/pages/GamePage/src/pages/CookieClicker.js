@@ -1,3 +1,4 @@
+//クッキー・クラッカーのメイン画面
 import { useState } from "react";
 import cookieImg from "../components/cookie.png"; 
 

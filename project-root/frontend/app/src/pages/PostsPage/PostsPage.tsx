@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { SectionCard, Badge } from "../components/Ui";
-import { Item, seedItems } from "../lib/types";
-import { statusColor } from "../lib/utils";
+import { SectionCard, Badge } from "../../components/Ui";
+import { Item, seedItems } from "../../lib/types";
+import { statusColor } from "../../lib/utils";
 
 export default function PostsPage({ user }: { user: { name: string; email: string } | null }) {
   const [items, setItems] = useState<Item[]>(seedItems);

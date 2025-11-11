@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { SectionCard } from "../../components/Ui";
+import { Link } from "react-router-dom";
 
 type Score = { name: string; score: number; ts: number };
 
@@ -77,6 +78,14 @@ export default function GamePage({ user }: { user: { name: string; email: string
               </button>
             </>
           )}
+        </div>
+      </SectionCard>
+      <SectionCard title="🍪 クッキー・クラッカー">
+        <div className="flex flex-col items-center gap-4 py-4">
+          <p className="text-gray-700 text-sm">クリックでクッキーを増やす人気ゲーム！</p>
+          <Link to="/cookie" className="px-4 py-2 rounded-xl bg-yellow-500 text-white hover:bg-yellow-600">
+            クッキー・クラッカーを遊ぶ →
+          </Link>
         </div>
       </SectionCard>
 
