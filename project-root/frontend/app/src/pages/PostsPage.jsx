@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SectionCard, Badge } from "../components/Ui";
-import { Item, seedItems } from "../lib/types";
+import { seedItems } from "../lib/types";
 import { statusColor } from "../lib/utils";
 
-export default function PostsPage({ user }: { user: { name: string; email: string } | null }) {
-  const [items, setItems] = useState<Item[]>(seedItems);
+export default function PostsPage({ user }) {
+  const [items, setItems] = useState(seedItems);
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState("すべて");
   const [form, setForm] = useState({ title: "", course: "", category: "教科書", image: "" });
@@ -17,12 +17,12 @@ export default function PostsPage({ user }: { user: { name: string; email: strin
     });
   }, [items, query, cat]);
 
-  function createItem(e: React.FormEvent) {
+  function createItem(e) {
     e.preventDefault();
     if (!user) return alert("ログインが必要です");
     const id = `i${Math.random().toString(36).slice(2, 8)}`;
     const fallback = "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop";
-    const newItem: Item = {
+    const newItem = {
       id,
       title: form.title.trim() || "無題の教材",
       course: form.course.trim() || "学部 未設定",

@@ -1,12 +1,6 @@
 import { useState } from "react";
 
-// ✅ App.tsx から受け取る props の型を定義
-type AuthPageProps = {
-  onLogin: (email: string) => void;
-  onSignup: (name: string, email: string) => void;
-};
-
-export default function AuthPage({ onLogin, onSignup }: AuthPageProps) {
+export default function AuthPage({ onLogin, onSignup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -24,7 +18,7 @@ export default function AuthPage({ onLogin, onSignup }: AuthPageProps) {
         setMessage("ログイン成功！");
         localStorage.setItem("token", data.token);
 
-        // ✅ App.tsx にログイン成功を伝える
+        // App にログイン成功を伝える
         onLogin(email);
       } else {
         setMessage(data.message || "ログイン失敗");

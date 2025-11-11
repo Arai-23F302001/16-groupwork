@@ -1,20 +1,9 @@
-export default function TopBar({
-  current,
-  onTab,
-  user,
-  onLogout,
-  onGoAuth,
-}: {
-  current: string;
-  onTab: (t: string) => void;
-  user: { name: string; email: string } | null;
-  onLogout: () => void;
-  onGoAuth: () => void;
-}) {
+export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
   const tabs = [
     { key: "posts", label: "投稿" },
     { key: "game", label: "ミニゲーム" },
   ];
+
   return (
     <header className="sticky top-0 z-10 backdrop-blur bg-white/80 border-b border-gray-100">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">

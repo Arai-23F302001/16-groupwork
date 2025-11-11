@@ -1,7 +1,6 @@
-import type { ItemStatus } from "./types";
-
-export function statusColor(st: ItemStatus) {
-  switch (st) {
+// 投稿ステータスに応じて色を変える関数
+export function statusColor(status) {
+  switch (status) {
     case "募集中": return "bg-green-50 text-green-700 ring-green-200";
     case "承認待ち": return "bg-amber-50 text-amber-700 ring-amber-200";
     case "貸出中": return "bg-indigo-50 text-indigo-700 ring-indigo-200";

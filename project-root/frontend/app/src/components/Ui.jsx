@@ -1,6 +1,6 @@
 import React from "react";
 
-export function Badge({ className = "", children }: { className?: string; children: React.ReactNode }) {
+export function Badge({ className = "", children }) {
   return (
     <span className={`inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium ring-1 ${className}`}>
       {children}
@@ -8,15 +8,7 @@ export function Badge({ className = "", children }: { className?: string; childr
   );
 }
 
-export function SectionCard({
-  title,
-  action,
-  children,
-}: {
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
+export function SectionCard({ title, action, children }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-5">
       <div className="flex items-center justify-between mb-3">

@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { SectionCard } from "../../components/Ui";
 
-type Score = { name: string; score: number; ts: number };
-
-export default function GamePage({ user }: { user: { name: string; email: string } | null }) {
-  const [phase, setPhase] = useState<"ready" | "count" | "play" | "done">("ready");
+export default function GamePage({ user }) {
+  const [phase, setPhase] = useState("ready"); // ready | count | play | done
   const [countdown, setCountdown] = useState(3);
   const [timeLeft, setTimeLeft] = useState(10);
   const [score, setScore] = useState(0);
-  const [board, setBoard] = useState<Score[]>(() => {
+  const [board, setBoard] = useState(() => {
     const raw = localStorage.getItem("game-board");
     return raw ? JSON.parse(raw) : [];
   });
@@ -37,7 +35,7 @@ export default function GamePage({ user }: { user: { name: string; email: string
         if (s <= 1) {
           clearInterval(t);
           setPhase("done");
-          const entry: Score = { name: user?.name || "ゲスト", score, ts: Date.now() };
+          const entry = { name: user?.name || "ゲスト", score, ts: Date.now() };
           const next = [...board, entry].sort((a, b) => b.score - a.score).slice(0, 10);
           setBoard(next);
           localStorage.setItem("game-board", JSON.stringify(next));
