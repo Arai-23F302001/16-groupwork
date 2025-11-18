@@ -6,7 +6,7 @@ import PostsPage from "./pages/PostsPage";
 
 export default function App() {
   // 型注釈を削除
-  const [tab, setTab] = useState("posts");
+  const [tab, setTab] = useState("auth");
   const [user, setUser] = useState(null);
 
   const onLogin = (email) => { setUser({ name: email.split("@")[0] || "user", email }); setTab("posts"); };
