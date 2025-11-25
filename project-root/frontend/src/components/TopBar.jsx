@@ -1,7 +1,4 @@
-<<<<<<< HEAD:project-root/frontend/app/src/components/TopBar.jsx
-=======
 import React from "react";
->>>>>>> takei:project-root/frontend/src/components/TopBar.jsx
 export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
   const tabs = [
     { key: "posts", label: "投稿" },

@@ -1,10 +1,6 @@
 import { useMemo, useState } from "react";
 import { SectionCard, Badge } from "../components/Ui";
-<<<<<<< HEAD:project-root/frontend/app/src/pages/PostsPage.jsx
-import { seedItems } from "../lib/types";
-=======
 import { seedItems } from "../lib/type";
->>>>>>> takei:project-root/frontend/src/pages/PostsPage.jsx
 import { statusColor } from "../lib/utils";
 import React from "react";
 

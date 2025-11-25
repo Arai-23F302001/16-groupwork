@@ -13,8 +13,5 @@ if (rootElement) {
   );
 } else {
   console.error("Root element not found");
-<<<<<<< HEAD:project-root/frontend/app/src/main.jsx
 }
-=======
-}
->>>>>>> takei:project-root/frontend/src/main.jsx
+

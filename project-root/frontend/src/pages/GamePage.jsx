@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
-<<<<<<< HEAD:project-root/frontend/app/src/pages/GamePage/GamePage.jsx
-import { SectionCard } from "../../components/Ui";
-=======
 import { SectionCard } from "../components/Ui";
 import React from "react";
->>>>>>> takei:project-root/frontend/src/pages/GamePage.jsx
 
 export default function GamePage({ user }) {
   const [phase, setPhase] = useState("ready"); // ready | count | play | done
