@@ -4,26 +4,38 @@ export default function AuthPage({ onLogin, onSignup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    setMessage("");
+    if (!email || !password) {
+      setMessage("メールアドレスとパスワードを入力してください");
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await fetch("http://localhost:3000/login", {
         method: "POST",
+        credentials: "include", // ← 重要: httpOnly cookie を受け取る/送る
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
         setMessage("ログイン成功！");
-        localStorage.setItem("token", data.token);
-        onLogin(email);
+        // サーバーがユーザー情報を返すならそれを渡し、なければ email を渡す
+        onLogin(data.user ?? { email });
       } else {
         setMessage(data.message || "ログイン失敗");
       }
     } catch (err) {
       console.error(err);
       setMessage("サーバーエラー");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,14 +60,20 @@ export default function AuthPage({ onLogin, onSignup }) {
       />
 
       <button
+        type="button"
         onClick={handleLogin}
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+        disabled={loading}
+        className={`w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors ${loading ? "opacity-60 cursor-not-allowed" : ""
+          }`}
       >
-        ログイン
+        {loading ? "ログイン中..." : "ログイン"}
       </button>
 
       {message && (
-        <p className={`mt-4 text-center ${message.includes("成功") ? "text-green-500" : "text-red-500"}`}>
+        <p
+          className={`mt-4 text-center ${message.includes("成功") ? "text-green-500" : "text-red-500"
+            }`}
+        >
           {message}
         </p>
       )}
@@ -63,6 +81,7 @@ export default function AuthPage({ onLogin, onSignup }) {
       <p className="mt-6 text-sm text-gray-500">
         アカウントをお持ちでない方は{" "}
         <button
+          type="button"
           onClick={() => onSignup(email, password)}
           className="text-blue-500 hover:underline"
         >

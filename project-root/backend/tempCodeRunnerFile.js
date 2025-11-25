@@ -9,11 +9,11 @@ const PORT = 3000;
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: "http://localhost:5173", // ViteのReactポート
+  origin: "http://localhost:5173", // Reactのポート
   credentials: true
 }));
 
-// ダミーユーザーの配列（メモリ上）
+// ダミーユーザー
 const users = [];
 
 app.post("/signup", async (req, res) => {
