@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function AuthPage({ onLogin, onSignup }) {
   const [email, setEmail] = useState("");
@@ -63,16 +63,18 @@ export default function AuthPage({ onLogin, onSignup }) {
         type="button"
         onClick={handleLogin}
         disabled={loading}
-        className={`w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors ${loading ? "opacity-60 cursor-not-allowed" : ""
-          }`}
+        className={`w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition-colors ${
+          loading ? "opacity-60 cursor-not-allowed" : ""
+        }`}
       >
         {loading ? "ログイン中..." : "ログイン"}
       </button>
 
       {message && (
         <p
-          className={`mt-4 text-center ${message.includes("成功") ? "text-green-500" : "text-red-500"
-            }`}
+          className={`mt-4 text-center ${
+            message.includes("成功") ? "text-green-500" : "text-red-500"
+          }`}
         >
           {message}
         </p>
