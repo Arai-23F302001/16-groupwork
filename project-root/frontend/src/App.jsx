@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import TopBar from "./components/TopBar";
 import AuthPage from "./pages/AuthPage";
-import GamePage from "./pages/GamePage";
+import GamePage from "./pages/GamePage/GamePage";
 import PostsPage from "./pages/PostsPage";
 
 export default function App() {

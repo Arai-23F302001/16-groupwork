@@ -13,16 +13,11 @@ export default function GamePage({ user }) {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-      <SectionCard
-        title="ミニゲーム（10秒連打！）"
-        action={
-          <span className="text-sm text-gray-500">トップ10を目指そう</span>
-        }
-      >
-        <TenSecondClicker user={user} board={board} setBoard={setBoard} />
+      <SectionCard title="10秒ぴったり押し">
+        <TenSecondStop />
       </SectionCard>
       <SectionCard
-        title="ミニゲーム（10秒連打！）"
+        title="10秒連打"
         action={
           <span className="text-sm text-gray-500">トップ10を目指そう</span>
         }
