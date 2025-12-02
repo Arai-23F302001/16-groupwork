@@ -1,8 +1,11 @@
 import React from "react";
 export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
   const tabs = [
-    { key: "posts", label: "投稿" },
+    { key: "keijiban", label: "掲示板" },
     { key: "game", label: "ミニゲーム" },
+    { key: "point", label: "ポイント管理" },
+    { key: "toukou", label: "投稿する" },
+    { key: "mypage", label: "マイページ" },
   ];
 
   return (
