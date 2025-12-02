@@ -62,6 +62,16 @@ export default function App() {
       {tab === "auth" && <AuthPage onLogin={onLogin} onSignup={onSignup} />}
       {tab === "game" && <GamePage user={user} />}
       {tab === "posts" && <PostsPage user={user} />}
+            {tab === "point-history" && (
+        <div className="p-6 text-gray-600 text-center">ポイント履歴ページ</div>
+      )}
+      {tab === "toukou-article" && (
+        <div className="p-6 text-gray-600 text-center">記事投稿ページ</div>
+      )}
+      {tab === "mypage-setting" && (
+        <div className="p-6 text-gray-600 text-center">設定ページ</div>
+      )}
+
       <footer className="py-10 text-center text-xs text-gray-400">
         © 2025 Campus Share Demo
       </footer>
