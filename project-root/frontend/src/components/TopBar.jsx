@@ -14,7 +14,14 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
         { key: "point-exchange", label: "交換" },
       ],
     },
-    { key: "toukou", label: "投稿する" },
+    {
+      key: "post",
+      label: "投稿する",
+      submenu: [
+        { key: "post-borrow", label: "借りる" },
+        { key: "post-lend", label: "貸す" },
+      ],
+    },
     {
       key: "mypage",
       label: "マイページ",
@@ -29,19 +36,18 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
   // ★ サーバーから取得するポイント
   const [point, setPoint] = useState(null);
 
-  // ★ 疑似サーバー API：1秒後に 500000 を返す
+  // ★ 疑似サーバー API
   const fetchPoint = async () => {
     return new Promise((resolve) => {
       setTimeout(() => resolve(500000), 1000);
     });
   };
 
-  // ★ 起動時にポイントを取得
   useEffect(() => {
     fetchPoint().then((p) => setPoint(p));
   }, []);
 
-  // Mega メニュー関連
+  // Mega Menu 関連
   const [megaOpen, setMegaOpen] = useState(false);
   const closeTimer = useRef(null);
   const [hoverMain, setHoverMain] = useState(null);
@@ -72,14 +78,21 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
           {tabs.map((t) => (
             <button
               key={t.key}
-              onClick={() => onTab(t.key)}
+              onClick={() => {
+                if (!user) {
+                  alert("ログインが必要です");
+                  onGoAuth();
+                  return;
+                }
+                onTab(t.key);
+              }}
               onMouseEnter={() => setHoverMain(t.key)}
               className={`px-3 py-1.5 rounded-xl text-sm font-medium text-left transition
-                ${
-                  current === t.key || hoverMain === t.key
-                    ? "bg-indigo-600 text-white"
-                    : "hover:bg-gray-200"
-                }`}
+    ${
+      current === t.key || hoverMain === t.key
+        ? "bg-indigo-600 text-white"
+        : "hover:bg-gray-200"
+    }`}
             >
               {t.label}
             </button>
@@ -136,7 +149,7 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
               >
                 <div
                   className={`
-                    rounded-xl px-4 py-3 transition
+                    rounded-xl px-4 py-3 transition min-h-32
                     ${hoverMain === t.key ? "bg-gray-50" : "hover:bg-gray-50"}
                   `}
                 >
@@ -144,13 +157,19 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
                     {t.label}
                   </div>
 
-                  {t.submenu ? (
+                  {/* ▼ submenu がある場合だけ表示（無い場合は空欄を維持） */}
+                  {t.submenu && (
                     <div className="space-y-2">
                       {t.submenu.map((item) => (
                         <div
                           key={item.key}
                           className="cursor-pointer text-gray-600 hover:text-indigo-600 transition"
                           onClick={() => {
+                            if (!user) {
+                              alert("ログインしてください");
+                              onGoAuth();
+                              return;
+                            }
                             onTab(item.key);
                             setMegaOpen(false);
                           }}
@@ -159,7 +178,6 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
                             {item.label}
                           </span>
 
-                          {/* ★ 現在のポイントはここに表示 */}
                           {item.key === "point-current" && point !== null && (
                             <span className="ml-2 text-xs text-gray-500">
                               （{point.toLocaleString()} pt）
@@ -167,10 +185,6 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
                           )}
                         </div>
                       ))}
-                    </div>
-                  ) : (
-                    <div className="text-gray-400 text-xs">
-                      （サブメニューなし）
                     </div>
                   )}
                 </div>

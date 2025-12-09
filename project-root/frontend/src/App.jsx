@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import TopBar from "./components/TopBar";
 import AuthPage from "./pages/AuthPage";
 import GamePage from "./pages/GamePage/GamePage";
-import PostsPage from "./pages/PostsPage";
+import PostsPage from "./pages/PostPage/PostsPage";
 import ProfilePage from "./pages/MyPage/ProfilePage";
 import PointDisplay from "./pages/PointPage/PointDisplay";
 import PointHistory from "./pages/PointPage/PointHistory";
-import NotificationPage from "./pages/MyPage/NotificationPage.jsx";
+import NotificationPage from "./pages/MyPage/NotificationPage";
+import PostLend from "./pages/PostPage/PostLend";
+import PostBorrow from "./pages/PostPage/PostBorrow";
 
 export default function App() {
   const [tab, setTab] = useState("auth");
@@ -110,6 +112,8 @@ export default function App() {
       {tab === "point-exchange" && <PointDisplay user={user} />}
       {tab === "point-history" && <PointHistory user={user} />}
       {tab === "mypage-notify" && <NotificationPage user={user} />}
+      {tab === "post-lend" && <PostLend user={user} />}
+      {tab === "post-borrow" && <PostBorrow user={user} />}
 
       {/* 投稿する：投稿作成フォーム */}
       {tab === "toukou" && (
