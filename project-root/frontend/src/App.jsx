@@ -3,6 +3,10 @@ import TopBar from "./components/TopBar";
 import AuthPage from "./pages/AuthPage";
 import GamePage from "./pages/GamePage/GamePage";
 import PostsPage from "./pages/PostsPage";
+import ProfilePage from "./pages/MyPage/ProfilePage";
+import PointDisplay from "./pages/PointPage/PointDisplay";
+import PointHistory from "./pages/PointPage/PointHistory";
+import NotificationPage from "./pages/MyPage/NotificationPage.jsx";
 
 export default function App() {
   const [tab, setTab] = useState("auth");
@@ -102,6 +106,10 @@ export default function App() {
       {tab === "point-history" && (
         <div className="p-6 text-gray-600 text-center">ポイント履歴ページ</div>
       )}
+      {tab === "mypage-profile" && <ProfilePage user={user} />}
+      {tab === "point-exchange" && <PointDisplay user={user} />}
+      {tab === "point-history" && <PointHistory user={user} />}
+      {tab === "mypage-notify" && <NotificationPage user={user} />}
 
       {/* 投稿する：投稿作成フォーム */}
       {tab === "toukou" && (
@@ -121,9 +129,7 @@ export default function App() {
               <input
                 className="w-full rounded-xl border px-3 py-2"
                 value={form.title}
-                onChange={(e) =>
-                  setForm({ ...form, title: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
                 required
               />
             </div>
@@ -132,9 +138,7 @@ export default function App() {
               <input
                 className="w-full rounded-xl border px-3 py-2"
                 value={form.course}
-                onChange={(e) =>
-                  setForm({ ...form, course: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, course: e.target.value })}
               />
             </div>
             <div>
@@ -142,9 +146,7 @@ export default function App() {
               <select
                 className="w-full rounded-xl border px-3 py-2"
                 value={form.category}
-                onChange={(e) =>
-                  setForm({ ...form, category: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
               >
                 {["教科書", "参考書"].map((c) => (
                   <option key={c} value={c}>
@@ -158,9 +160,7 @@ export default function App() {
               <input
                 className="w-full rounded-xl border px-3 py-2"
                 value={form.image}
-                onChange={(e) =>
-                  setForm({ ...form, image: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, image: e.target.value })}
               />
             </div>
             <div className="md:col-span-2">

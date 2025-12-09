@@ -1,5 +1,5 @@
 // TopBar.jsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
   const tabs = [
@@ -26,11 +26,24 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
     },
   ];
 
-  // Mega メニューの開閉状態
+  // ★ サーバーから取得するポイント
+  const [point, setPoint] = useState(null);
+
+  // ★ 疑似サーバー API：1秒後に 500000 を返す
+  const fetchPoint = async () => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(500000), 1000);
+    });
+  };
+
+  // ★ 起動時にポイントを取得
+  useEffect(() => {
+    fetchPoint().then((p) => setPoint(p));
+  }, []);
+
+  // Mega メニュー関連
   const [megaOpen, setMegaOpen] = useState(false);
   const closeTimer = useRef(null);
-
-  // 「いまどのタブ列に乗っているか」（上のボタンと下の列を同期させる）
   const [hoverMain, setHoverMain] = useState(null);
 
   const openMega = () => {
@@ -51,12 +64,10 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
       onMouseEnter={openMega}
       onMouseLeave={closeMega}
     >
-      {/* ▼ 上部ナビゲーションバー */}
+      {/* 上部ナビゲーションバー */}
       <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-3 relative">
-        {/* ロゴ：下の MegaMenu でも同じ幅のダミーを置く */}
         <div className="w-32 font-bold">Campus Share</div>
 
-        {/* 上側メニュー：5列グリッドにする（下の列と合わせる） */}
         <nav className="flex-1 grid grid-cols-5 gap-10">
           {tabs.map((t) => (
             <button
@@ -65,7 +76,6 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
               onMouseEnter={() => setHoverMain(t.key)}
               className={`px-3 py-1.5 rounded-xl text-sm font-medium text-left transition
                 ${
-                  // 現在のタブ or ホバー中タブは強くハイライト
                   current === t.key || hoverMain === t.key
                     ? "bg-indigo-600 text-white"
                     : "hover:bg-gray-200"
@@ -76,7 +86,7 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
           ))}
         </nav>
 
-        {/* 右上ユーザーエリア */}
+        {/* ユーザーエリア */}
         <div className="ml-4 flex items-center gap-2">
           {user ? (
             <>
@@ -99,7 +109,7 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
         </div>
       </div>
 
-      {/* ▼ Mega Menu 本体 */}
+      {/* ▼ Mega Menu */}
       <div
         className={`
           absolute left-0 right-0 z-20
@@ -114,25 +124,20 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
         `}
       >
         <div className="max-w-6xl mx-auto px-6 py-8 flex text-sm">
-          {/* ロゴ分のダミー幅（上の w-32 と合わせる） */}
           <div className="w-32" />
-          {/* 下側 5 列グリッド（上の nav と同じ構造） */}
           <div className="flex-1 grid grid-cols-5 gap-10">
             {tabs.map((t, idx) => (
               <div
                 key={t.key}
                 onMouseEnter={() => setHoverMain(t.key)}
-                className={idx > 0 ? "border-l border-gray-100 pl-6 pt-1" : "pt-1"}
+                className={
+                  idx > 0 ? "border-l border-gray-100 pl-6 pt-1" : "pt-1"
+                }
               >
-                {/* 列全体のホバー背景（Apple っぽいカード） */}
                 <div
                   className={`
                     rounded-xl px-4 py-3 transition
-                    ${
-                      hoverMain === t.key
-                        ? "bg-gray-50"
-                        : "hover:bg-gray-50"
-                    }
+                    ${hoverMain === t.key ? "bg-gray-50" : "hover:bg-gray-50"}
                   `}
                 >
                   <div className="font-semibold text-gray-700 mb-3">
@@ -150,15 +155,23 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
                             setMegaOpen(false);
                           }}
                         >
-                          {/* 下線アニメーション風 */}
                           <span className="inline-block border-b-2 border-transparent hover:border-indigo-500 pb-0.5">
                             {item.label}
                           </span>
+
+                          {/* ★ 現在のポイントはここに表示 */}
+                          {item.key === "point-current" && point !== null && (
+                            <span className="ml-2 text-xs text-gray-500">
+                              （{point.toLocaleString()} pt）
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-gray-400 text-xs">（サブメニューなし）</div>
+                    <div className="text-gray-400 text-xs">
+                      （サブメニューなし）
+                    </div>
                   )}
                 </div>
               </div>
