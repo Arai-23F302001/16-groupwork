@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React from "react";
 export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
   const tabs = [
@@ -38,5 +39,49 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
         </div>
       </div>
     </header>
+=======
+import React, { useState } from "react";
+import { BrowserRouter as Router } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import AuthPage from "../pages/AuthPage";
+import HomePage from "../App";
+import BorrowPage from "../pages/PostPage/PostBorrow";
+import LendPage from "../pages/PostPage/PostLend";
+import NotificationPage from "../pages/MyPage/NotificationPage";
+
+export default function App() {
+  const [tab, setTab] = useState("home");
+  const [user, setUser] = useState(null); // ← ログイン状態
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  <button
+    className="md:hidden px-3 py-2 text-gray-700"
+    onClick={() => setSidebarOpen(true)}
+  >
+    ☰
+  </button>;
+
+  // まだログインしていなければ AuthPage を表示
+  if (!user) {
+    return <AuthPage onLogin={setUser} />;
+  }
+
+  return (
+    <Router>
+      <div className="flex">
+        {/* ← タブメニュー（サイドバー） */}
+        <Sidebar tab={tab} setTab={setTab} />
+
+        {/* ← メイン画面 */}
+        <div className="flex-1 p-4">
+          {tab === "home" && <HomePage user={user} />}
+
+          {tab === "post-borrow" && <BorrowPage user={user} />}
+          {tab === "post-lend" && <LendPage user={user} />}
+
+          {tab === "mypage-notify" && <NotificationPage user={user} />}
+        </div>
+      </div>
+    </Router>
+>>>>>>> Stashed changes
   );
 }
