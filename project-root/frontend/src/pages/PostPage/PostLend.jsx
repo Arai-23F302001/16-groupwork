@@ -1,24 +1,67 @@
 import React, { useState } from "react";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { auth, db, storage } from "../../firebase";
 
-export default function PostLend({ onSubmit }) {
+export default function PostLend() {
   const [title, setTitle] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [detail, setDetail] = useState("");
   const [deadline, setDeadline] = useState("");
   const [price, setPrice] = useState(0);
   const [free, setFree] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({
-      title,
-      imageFile,
-      detail,
-      deadline,
-      price: free ? 0 : price,
-      free,
-      type: "lend",
-    });
+    if (!auth.currentUser) {
+      alert("ログインしてください");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let imageUrl = "";
+
+      // ===== 画像アップロード =====
+      if (imageFile) {
+        const imageRef = ref(
+          storage,
+          `posts/${auth.currentUser.uid}/${Date.now()}_${imageFile.name}`
+        );
+        await uploadBytes(imageRef, imageFile);
+        imageUrl = await getDownloadURL(imageRef);
+      }
+
+      // ===== Firestore に保存 =====
+      await addDoc(collection(db, "posts"), {
+        title,
+        detail,
+        deadline,
+        price: free ? 0 : Number(price),
+        free,
+        type: "lend",
+        imageUrl,
+        ownerUid: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+      });
+
+      // フォーム初期化
+      setTitle("");
+      setDetail("");
+      setDeadline("");
+      setPrice(0);
+      setFree(false);
+      setImageFile(null);
+
+      alert("投稿しました！");
+    } catch (err) {
+      console.error(err);
+      alert("投稿に失敗しました");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,7 +69,6 @@ export default function PostLend({ onSubmit }) {
       <h2 className="text-xl font-semibold mb-4">貸したい物の投稿</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* タイトル */}
         <div>
           <label className="font-semibold block mb-1">
             掲示板に表示するタイトル
@@ -43,8 +85,6 @@ export default function PostLend({ onSubmit }) {
         {/* 写真 */}
         <div>
           <label className="font-semibold block mb-1">写真</label>
-
-          {/* 隠し file input */}
           <input
             id="imageFileInput"
             type="file"
@@ -52,30 +92,14 @@ export default function PostLend({ onSubmit }) {
             onChange={(e) => setImageFile(e.target.files[0])}
             className="hidden"
           />
-
-          {/* カスタムボタン */}
           <label
             htmlFor="imageFileInput"
-            className="
-      inline-block
-      bg-indigo-600
-      text-white
-      px-4 py-2
-      rounded-lg
-      shadow-md
-      cursor-pointer
-      hover:bg-indigo-700
-      active:translate-y-1
-      active:shadow-sm
-      transition-all
-    "
+            className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-indigo-700"
           >
             📸 写真を挿入
           </label>
-
-          {/* 選択されたファイル名を表示 */}
           {imageFile && (
-            <p className="mt-2 text-gray-600 text-sm">
+            <p className="mt-2 text-sm text-gray-600">
               選択済み: {imageFile.name}
             </p>
           )}
@@ -109,7 +133,6 @@ export default function PostLend({ onSubmit }) {
           <label className="font-semibold block mb-1">
             対価（レンタルポイント）
           </label>
-
           <div className="flex items-center gap-3">
             <input
               type="number"
@@ -119,7 +142,6 @@ export default function PostLend({ onSubmit }) {
               disabled={free}
               onChange={(e) => setPrice(e.target.value)}
             />
-
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -131,8 +153,11 @@ export default function PostLend({ onSubmit }) {
           </div>
         </div>
 
-        <button className="w-full bg-indigo-600 text-white py-2 rounded-lg">
-          この内容で投稿する
+        <button
+          disabled={loading}
+          className="w-full bg-indigo-600 text-white py-2 rounded-lg disabled:opacity-50"
+        >
+          {loading ? "投稿中..." : "この内容で投稿する"}
         </button>
       </form>
     </div>
