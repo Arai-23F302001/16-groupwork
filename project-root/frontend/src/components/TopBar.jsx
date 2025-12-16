@@ -101,16 +101,37 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
 
         {/* ユーザーエリア */}
         <div className="ml-4 flex items-center gap-2">
+          {/* ユーザーエリア */}
           {user ? (
-            <>
-              <span className="text-sm text-gray-600">{user.name} さん</span>
+            <div className="flex items-center gap-3">
+              {/* ユーザー名 */}
+              <span className="text-sm text-gray-600">
+                {user.displayName ?? "ユーザー"} さん
+              </span>
+
+              {/* ユーザーアイコン */}
+              <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center overflow-hidden">
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt="user icon"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold">
+                    {(user.displayName ?? "U").charAt(0)}
+                  </span>
+                )}
+              </div>
+
+              {/* ログアウト */}
               <button
                 className="px-3 py-1.5 rounded-xl bg-gray-100 text-sm"
                 onClick={onLogout}
               >
                 ログアウト
               </button>
-            </>
+            </div>
           ) : (
             <button
               className="px-3 py-1.5 rounded-xl bg-gray-900 text-white text-sm"
