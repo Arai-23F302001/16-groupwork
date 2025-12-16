@@ -13,62 +13,90 @@ import { statusColor } from "../../lib/utils";
 
 export default function PostsPage() {
   const [items, setItems] = useState([]);
-  const [userMap, setUserMap] = useState({}); // uid -> displayName
+  const [userMap, setUserMap] = useState({});
   const [queryText, setQueryText] = useState("");
   const [cat, setCat] = useState("すべて");
   const [loading, setLoading] = useState(true);
 
   // =============================
-  // posts 取得
+  // postsLend + postsBorrow 取得
   // =============================
   useEffect(() => {
-    const q = query(
-      collection(db, "posts"),
-      orderBy("createdAt", "desc")
-    );
+    let lendPosts = [];
+    let borrowPosts = [];
 
-    const unsub = onSnapshot(q, async (snap) => {
-      const posts = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+    const updateItems = async () => {
+      const all = [...lendPosts, ...borrowPosts];
 
-      // ===== ownerUid を収集 =====
-      const uids = [...new Set(posts.map((p) => p.ownerUid).filter(Boolean))];
+      // ===== 投稿者 uid を収集 =====
+      const uids = [...new Set(all.map((p) => p.ownerUid).filter(Boolean))];
 
-      // ===== users 取得 =====
       const users = {};
       await Promise.all(
         uids.map(async (uid) => {
-          const userSnap = await getDoc(doc(db, "users", uid));
-          if (userSnap.exists()) {
-            users[uid] = userSnap.data().displayName;
-          } else {
-            users[uid] = "名無し";
-          }
+          const snap = await getDoc(doc(db, "users", uid));
+          users[uid] = snap.exists() ? snap.data().displayName : "名無し";
         })
       );
-
       setUserMap(users);
 
-      // ===== 表示用に整形 =====
-      const list = posts.map((p) => ({
-        id: p.id,
-        title: p.title,
-        course: "未設定",
-        category: "教科書",
-        status: p.free ? "無料" : "募集中",
-        ownerUid: p.ownerUid,
-        image:
-          p.imageUrl ||
-          "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop",
-      }));
+      // ===== 表示用データに整形 =====
+      const list = all
+        .sort(
+          (a, b) =>
+            (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+        )
+        .map((p) => ({
+          id: p.id,
+          title: p.title,
+          kind: p.kind, // lend / borrow
+          badge: p.kind === "lend" ? "貸す" : "借る",
+          category: p.kind === "lend" ? "貸したい" : "借りたい",
+          status:
+            p.kind === "lend"
+              ? p.free
+                ? "無料"
+                : "募集中"
+              : "借りたいです",
+          ownerUid: p.ownerUid,
+          image:
+            "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop",
+        }));
 
       setItems(list);
       setLoading(false);
-    });
+    };
 
-    return () => unsub();
+    // ===== postsLend =====
+    const unsubLend = onSnapshot(
+      query(collection(db, "postsLend"), orderBy("createdAt", "desc")),
+      (snap) => {
+        lendPosts = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+          kind: "lend",
+        }));
+        updateItems();
+      }
+    );
+
+    // ===== postsBorrow =====
+    const unsubBorrow = onSnapshot(
+      query(collection(db, "postsBorrow"), orderBy("createdAt", "desc")),
+      (snap) => {
+        borrowPosts = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+          kind: "borrow",
+        }));
+        updateItems();
+      }
+    );
+
+    return () => {
+      unsubLend();
+      unsubBorrow();
+    };
   }, []);
 
   // =============================
@@ -89,7 +117,7 @@ export default function PostsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-      {/* 検索 */}
+      {/* ================= 検索 ================= */}
       <SectionCard title="検索 / フィルター">
         <div className="flex flex-col md:flex-row gap-3">
           <input
@@ -103,27 +131,42 @@ export default function PostsPage() {
             value={cat}
             onChange={(e) => setCat(e.target.value)}
           >
-            {["すべて", "教科書", "参考書"].map((c) => (
+            {["すべて", "貸したい", "借りたい"].map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
         </div>
       </SectionCard>
 
-      {/* 掲示板 */}
+      {/* ================= 掲示板 ================= */}
       <SectionCard title="掲示板">
         {loading && (
-          <div className="text-center py-10 text-gray-500">
-            読み込み中...
-          </div>
+          <div className="text-center py-10 text-gray-500">読み込み中...</div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {filtered.map((it) => (
             <div
               key={it.id}
-              className="bg-white rounded-2xl ring-1 ring-gray-100 overflow-hidden shadow-sm"
+              className={`relative bg-white rounded-2xl overflow-hidden shadow-sm ring-1
+                ${
+                  it.kind === "lend"
+                    ? "ring-indigo-200"
+                    : "ring-orange-200"
+                }`}
             >
+              {/* 貸す / 借る バッジ */}
+              <div
+                className={`absolute top-2 left-2 z-10 rounded-full px-3 py-1 text-xs font-bold text-white
+                  ${
+                    it.kind === "lend"
+                      ? "bg-indigo-600"
+                      : "bg-orange-500"
+                  }`}
+              >
+                {it.badge}
+              </div>
+
               <div className="aspect-[4/3] bg-gray-100">
                 <img
                   src={it.image}
@@ -144,13 +187,19 @@ export default function PostsPage() {
                   </span>
                 </div>
 
-                <div className="text-sm text-gray-500">
-                  {it.course}・{it.category}
+                <div
+                  className={`text-sm font-medium
+                    ${
+                      it.kind === "lend"
+                        ? "text-indigo-600"
+                        : "text-orange-600"
+                    }`}
+                >
+                  {it.category}
                 </div>
 
                 <div className="text-xs text-gray-400">
-                  提供者：
-                  {userMap[it.ownerUid] || "名無し"}
+                  投稿者：{userMap[it.ownerUid] || "名無し"}
                 </div>
               </div>
             </div>

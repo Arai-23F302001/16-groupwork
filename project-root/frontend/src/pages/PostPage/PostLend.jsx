@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, db, storage } from "../../firebase";
+import { auth, db } from "../../firebase";
 
 export default function PostLend() {
   const [title, setTitle] = useState("");
-  const [imageFile, setImageFile] = useState(null);
   const [detail, setDetail] = useState("");
   const [deadline, setDeadline] = useState("");
   const [price, setPrice] = useState(0);
@@ -14,6 +12,7 @@ export default function PostLend() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!auth.currentUser) {
       alert("ログインしてください");
       return;
@@ -22,27 +21,13 @@ export default function PostLend() {
     setLoading(true);
 
     try {
-      let imageUrl = "";
-
-      // ===== 画像アップロード =====
-      if (imageFile) {
-        const imageRef = ref(
-          storage,
-          `posts/${auth.currentUser.uid}/${Date.now()}_${imageFile.name}`
-        );
-        await uploadBytes(imageRef, imageFile);
-        imageUrl = await getDownloadURL(imageRef);
-      }
-
       // ===== Firestore に保存 =====
-      await addDoc(collection(db, "posts"), {
+      await addDoc(collection(db, "postsLend"), {
         title,
         detail,
         deadline,
         price: free ? 0 : Number(price),
         free,
-        type: "lend",
-        imageUrl,
         ownerUid: auth.currentUser.uid,
         createdAt: serverTimestamp(),
       });
@@ -53,7 +38,6 @@ export default function PostLend() {
       setDeadline("");
       setPrice(0);
       setFree(false);
-      setImageFile(null);
 
       alert("投稿しました！");
     } catch (err) {
@@ -69,6 +53,7 @@ export default function PostLend() {
       <h2 className="text-xl font-semibold mb-4">貸したい物の投稿</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* タイトル */}
         <div>
           <label className="font-semibold block mb-1">
             掲示板に表示するタイトル
@@ -80,29 +65,6 @@ export default function PostLend() {
             onChange={(e) => setTitle(e.target.value)}
             required
           />
-        </div>
-
-        {/* 写真 */}
-        <div>
-          <label className="font-semibold block mb-1">写真</label>
-          <input
-            id="imageFileInput"
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files[0])}
-            className="hidden"
-          />
-          <label
-            htmlFor="imageFileInput"
-            className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-indigo-700"
-          >
-            📸 写真を挿入
-          </label>
-          {imageFile && (
-            <p className="mt-2 text-sm text-gray-600">
-              選択済み: {imageFile.name}
-            </p>
-          )}
         </div>
 
         {/* 詳細 */}
