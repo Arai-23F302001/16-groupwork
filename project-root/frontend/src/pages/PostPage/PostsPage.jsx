@@ -11,7 +11,7 @@ import { db } from "../../firebase";
 import { SectionCard } from "../../components/Ui";
 import { statusColor } from "../../lib/utils";
 
-export default function PostsPage({ onOpenDM }) {
+export default function PostsPage({ onOpenDM, user }){
   const [items, setItems] = useState([]);
   const [userMap, setUserMap] = useState({});
   const [queryText, setQueryText] = useState("");
@@ -21,10 +21,14 @@ export default function PostsPage({ onOpenDM }) {
   // =============================
   // 投稿クリック → DMを開く
   // =============================
-  const handleOpenDM = (post) => {
-    if (!post.ownerUid) return;
-    onOpenDM(post.ownerUid);
-  };
+ const handleOpenDM = (post) => {
+  if (!post.ownerUid || !post.id) return;
+  if (post.ownerUid === user?.uid) return;
+  onOpenDM(post.ownerUid, post.id);
+};
+
+
+
 
   // =============================
   // postsLend + postsBorrow 取得

@@ -8,41 +8,38 @@ import {
   serverTimestamp,
   doc,
   setDoc,
+  updateDoc,
+  where,
 } from "firebase/firestore";
-import { auth, db } from "../../firebase";
+import { db } from "../../firebase";
 
-export default function DMPage({ targetUid }) {
-  // =============================
-  // 🔑 UID整理
-  // =============================
-  const myUid = auth.currentUser?.uid;
-  const partnerUid = targetUid; // ★ 方法Bの核心
-
+export default function DMPage({ user, partnerUid, postId, onBack }) {
+  const myUid = user?.uid;
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
 
-  // =============================
-  // 🏠 roomId を一意に生成
-  // =============================
   const roomId = useMemo(() => {
-    if (!myUid || !partnerUid) return null;
-    return [myUid, partnerUid].sort().join("_");
-  }, [myUid, partnerUid]);
+    if (!myUid || !partnerUid || !postId) return null;
+    return `${postId}_${[myUid, partnerUid].sort().join("_")}`;
+  }, [myUid, partnerUid, postId]);
 
-  // =============================
-  // 📩 メッセージ購読
-  // =============================
+  // 🔹 ルーム作成 + メッセージ購読
   useEffect(() => {
     if (!roomId) return;
 
-    // ルームがなければ作成（初DM対策）
+    const roomRef = doc(db, "dmRooms", roomId);
+
+    // ★ 必ず作る（updatedAt を最初から持たせる）
     setDoc(
-      doc(db, "dmRooms", roomId),
+      roomRef,
       {
         members: {
           [myUid]: true,
           [partnerUid]: true,
         },
+        postId,
+        lastMessage: "",
+        lastSenderUid: null,
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
       },
@@ -51,7 +48,7 @@ export default function DMPage({ targetUid }) {
 
     const q = query(
       collection(db, "dmRooms", roomId, "messages"),
-      orderBy("createdAt")
+      orderBy("createdAt", "asc")
     );
 
     const unsub = onSnapshot(q, (snap) => {
@@ -59,72 +56,83 @@ export default function DMPage({ targetUid }) {
     });
 
     return () => unsub();
-  }, [roomId, myUid, partnerUid]);
+  }, [roomId]);
 
-  // =============================
-  // ✉️ メッセージ送信
-  // =============================
+  // 🔹 既読処理
+  useEffect(() => {
+    if (!roomId || !myUid) return;
+
+    const q = query(
+      collection(db, "notifications"),
+      where("toUid", "==", myUid),
+      where("roomId", "==", roomId),
+      where("read", "==", false)
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      snap.docs.forEach((d) => updateDoc(d.ref, { read: true }));
+    });
+
+    return () => unsub();
+  }, [roomId, myUid]);
+
+  // 🔹 送信
   const sendMessage = async () => {
     if (!text.trim() || !roomId) return;
 
-    await addDoc(collection(db, "dmRooms", roomId, "messages"), {
+    const roomRef = doc(db, "dmRooms", roomId);
+
+    await addDoc(collection(roomRef, "messages"), {
       text,
       senderUid: myUid,
       createdAt: serverTimestamp(),
     });
 
-    // ルームの最終更新時刻
-    await setDoc(
-      doc(db, "dmRooms", roomId),
-      { updatedAt: serverTimestamp() },
-      { merge: true }
-    );
+    // ★ MessagesPage を即更新させる核心
+    await updateDoc(roomRef, {
+      lastMessage: text,
+      lastSenderUid: myUid,
+      updatedAt: serverTimestamp(),
+    });
+
+    await addDoc(collection(db, "notifications"), {
+      toUid: partnerUid,
+      fromUid: myUid,
+      type: "dm",
+      roomId,
+      postId,
+      text,
+      read: false,
+      createdAt: serverTimestamp(),
+    });
 
     setText("");
   };
 
-  // =============================
-  // 🚫 相手未選択
-  // =============================
-  if (!partnerUid) {
-    return (
-      <div className="text-center text-gray-500 py-10">
-        DM相手が選択されていません
-      </div>
-    );
-  }
-
-  // =============================
-  // 🖥️ UI
-  // =============================
   return (
     <div className="max-w-xl mx-auto p-4 flex flex-col h-[calc(100vh-80px)]">
-      <h2 className="text-xl font-semibold mb-4">DM</h2>
+      <button onClick={onBack} className="text-indigo-600 mb-2">← 戻る</button>
 
-      {/* メッセージ一覧 */}
-      <div className="flex-1 overflow-y-auto space-y-2 mb-4">
+      <div className="flex-1 overflow-y-auto space-y-2">
         {messages.map((m) => (
           <div
             key={m.id}
-            className={`p-2 rounded-xl max-w-xs break-words
-              ${
-                m.senderUid === myUid
-                  ? "ml-auto bg-indigo-600 text-white"
-                  : "bg-gray-200"
-              }`}
+            className={`p-2 rounded-xl max-w-xs ${
+              m.senderUid === myUid
+                ? "ml-auto bg-indigo-600 text-white"
+                : "bg-gray-200"
+            }`}
           >
             {m.text}
           </div>
         ))}
       </div>
 
-      {/* 入力欄 */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 mt-2">
         <input
           className="flex-1 border rounded-xl px-3 py-2"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="メッセージを入力"
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
         <button

@@ -14,17 +14,26 @@ import NotificationPage from "./pages/MyPage/NotificationPage";
 import PostLend from "./pages/PostPage/PostLend";
 import PostBorrow from "./pages/PostPage/PostBorrow";
 import DMPage from "./pages/DM/DMPage";
+import MessagesPage from "./pages/DM/MessagePage.jsx";
+
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "./firebase";
 
 export default function App() {
   const [tab, setTab] = useState("auth");
   const [user, setUser] = useState(null);
 
-  // ★ DM用：相手の uid
+  // DM用
   const [dmTargetUid, setDmTargetUid] = useState(null);
+  const [dmPostId, setDmPostId] = useState(null);
 
-  // =============================
-  // 🔐 Firebaseログイン監視
-  // =============================
+  // 🔐 ログイン監視
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -36,25 +45,49 @@ export default function App() {
         setTab("auth");
       }
     });
-
     return () => unsub();
   }, []);
 
-  // =============================
+  // 🔔 DM通知（これ1つだけ）
+  useEffect(() => {
+    if (!user || tab === "dm") return;
+
+    const q = query(
+      collection(db, "notifications"),
+      where("toUid", "==", user.uid),
+      where("type", "==", "dm"),
+      where("read", "==", false),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      if (snap.empty) return;
+
+      const latest = snap.docs[0].data();
+      const open = window.confirm("新しいDMが届きました。開きますか？");
+
+      if (open) {
+        setDmTargetUid(latest.fromUid);
+        setDmPostId(latest.postId);
+        setTab("dm");
+      }
+    });
+
+    return () => unsub();
+  }, [user, tab]);
+
   // 🚪 ログアウト
-  // =============================
   const onLogout = async () => {
     await signOut(auth);
     setUser(null);
     setTab("auth");
   };
 
-  // =============================
   // 💬 DMを開く
-  // =============================
-  const handleOpenDM = (targetUid) => {
-    if (!targetUid || targetUid === user?.uid) return;
-    setDmTargetUid(targetUid);
+  const handleOpenDM = (partnerUid, postId) => {
+    if (!partnerUid || partnerUid === user?.uid) return;
+    setDmTargetUid(partnerUid);
+    setDmPostId(postId);
     setTab("dm");
   };
 
@@ -62,40 +95,44 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white text-gray-900">
       <TopBar
         current={tab}
-        onTab={(t) => setTab(t)}
+        onTab={setTab}
         user={user}
         onLogout={onLogout}
         onGoAuth={() => setTab("auth")}
       />
 
-      {/* 🔐 認証 */}
       {tab === "auth" && <AuthPage />}
 
-      {/* 以下ログイン必須 */}
-      {user && tab === "game" && <GamePage user={user} />}
-
       {user && tab === "posts" && (
-        <PostsPage
+        <PostsPage user={user} onOpenDM={handleOpenDM} />
+      )}
+
+      {user && tab === "messages" && (
+        <MessagesPage user={user} onOpenDM={handleOpenDM} />
+      )}
+
+      {user && tab === "dm" && dmTargetUid && dmPostId && (
+        <DMPage
           user={user}
-          onOpenDM={handleOpenDM} // ★ 追加
+          partnerUid={dmTargetUid}
+          postId={dmPostId}
+          onBack={() => {
+            setDmTargetUid(null);
+            setDmPostId(null);
+            setTab("messages");
+          }}
         />
       )}
 
+      {user && tab === "game" && <GamePage user={user} />}
       {user && tab === "mypage-profile" && <ProfilePage user={user} />}
       {user && tab === "point-exchange" && <PointDisplay user={user} />}
       {user && tab === "point-history" && <PointHistory user={user} />}
-      {user && tab === "mypage-notify" && <NotificationPage user={user} />}
+      {user && tab === "mypage-notify" && (
+        <NotificationPage user={user} onOpenDM={handleOpenDM} />
+      )}
       {user && tab === "post-lend" && <PostLend user={user} />}
       {user && tab === "post-borrow" && <PostBorrow user={user} />}
-
-      {/* 💬 DMページ */}
-      {user && tab === "dm" && dmTargetUid && (
-        <DMPage
-          user={user}
-          targetUid={dmTargetUid}
-          onBack={() => setTab("posts")}
-        />
-      )}
 
       <footer className="py-10 text-center text-xs text-gray-400">
         © 2025 Campus Share Demo
