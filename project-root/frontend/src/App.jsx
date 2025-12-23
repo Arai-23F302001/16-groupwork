@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
 import { createUserIfNotExists } from "./lib/user"; // ★追加
-
 import TopBar from "./components/TopBar";
 import AuthPage from "./pages/AuthPage";
 import GamePage from "./pages/GamePage/GamePage";

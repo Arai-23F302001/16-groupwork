@@ -43,8 +43,7 @@ export default function PostsPage() {
       // ===== 表示用データに整形 =====
       const list = all
         .sort(
-          (a, b) =>
-            (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
         )
         .map((p) => ({
           id: p.id,
@@ -53,14 +52,11 @@ export default function PostsPage() {
           badge: p.kind === "lend" ? "貸す" : "借る",
           category: p.kind === "lend" ? "貸したい" : "借りたい",
           status:
-            p.kind === "lend"
-              ? p.free
-                ? "無料"
-                : "募集中"
-              : "借りたいです",
+            p.kind === "lend" ? (p.free ? "無料" : "募集中") : "借りたいです",
           ownerUid: p.ownerUid,
           image:
             "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop",
+          image: p.imageUrl || "/no-image.png",
         }));
 
       setItems(list);
@@ -149,20 +145,12 @@ export default function PostsPage() {
             <div
               key={it.id}
               className={`relative bg-white rounded-2xl overflow-hidden shadow-sm ring-1
-                ${
-                  it.kind === "lend"
-                    ? "ring-indigo-200"
-                    : "ring-orange-200"
-                }`}
+                ${it.kind === "lend" ? "ring-indigo-200" : "ring-orange-200"}`}
             >
               {/* 貸す / 借る バッジ */}
               <div
                 className={`absolute top-2 left-2 z-10 rounded-full px-3 py-1 text-xs font-bold text-white
-                  ${
-                    it.kind === "lend"
-                      ? "bg-indigo-600"
-                      : "bg-orange-500"
-                  }`}
+                  ${it.kind === "lend" ? "bg-indigo-600" : "bg-orange-500"}`}
               >
                 {it.badge}
               </div>
@@ -190,9 +178,7 @@ export default function PostsPage() {
                 <div
                   className={`text-sm font-medium
                     ${
-                      it.kind === "lend"
-                        ? "text-indigo-600"
-                        : "text-orange-600"
+                      it.kind === "lend" ? "text-indigo-600" : "text-orange-600"
                     }`}
                 >
                   {it.category}
