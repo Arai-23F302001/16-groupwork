@@ -1,10 +1,13 @@
-// TopBar.jsx
 import React, { useState, useRef, useEffect } from "react";
 
-export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
-  // =============================
-  // タブ定義（完成版）
-  // =============================
+export default function TopBar({
+  current,
+  onTab,
+  user,
+  onLogout,
+  onGoAuth,
+  profile,
+}) {
   const tabs = [
     { key: "posts", label: "掲示板" },
     { key: "game", label: "ミニゲーム" },
@@ -113,9 +116,9 @@ export default function TopBar({ current, onTab, user, onLogout, onGoAuth }) {
               </span>
 
               <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center overflow-hidden">
-                {user.photoURL ? (
+                {profile?.avatarUrl ? (
                   <img
-                    src={user.photoURL}
+                    src={profile.avatarUrl}
                     alt="icon"
                     className="w-full h-full object-cover"
                   />

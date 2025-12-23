@@ -16,18 +16,20 @@ import DMPage from "./pages/DM/DMPage";
 import MessagesPage from "./pages/DM/MessagePage.jsx";
 
 import {
+  doc,
   collection,
   query,
   where,
   onSnapshot,
   orderBy,
 } from "firebase/firestore";
+
 import { db } from "./firebase";
 
 export default function App() {
+  const [profile, setProfile] = useState(null);
   const [tab, setTab] = useState("auth");
   const [user, setUser] = useState(null);
-
   // DM用
   const [dmTargetUid, setDmTargetUid] = useState(null);
   const [dmPostId, setDmPostId] = useState(null);
@@ -81,6 +83,21 @@ export default function App() {
     setUser(null);
     setTab("auth");
   };
+  //プロフィール画像用
+  useEffect(() => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+
+    const unsub = onSnapshot(doc(db, "users", user.uid), (snap) => {
+      if (snap.exists()) {
+        setProfile(snap.data());
+      }
+    });
+
+    return () => unsub();
+  }, [user]);
 
   // 💬 DMを開く
   const handleOpenDM = (partnerUid, postId) => {
@@ -96,6 +113,7 @@ export default function App() {
         current={tab}
         onTab={setTab}
         user={user}
+        profile={profile} // ★追加
         onLogout={onLogout}
         onGoAuth={() => setTab("auth")}
       />
