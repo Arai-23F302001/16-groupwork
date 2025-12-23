@@ -11,12 +11,21 @@ import { db } from "../../firebase";
 import { SectionCard } from "../../components/Ui";
 import { statusColor } from "../../lib/utils";
 
-export default function PostsPage() {
+export default function PostsPage({ onOpenDM, user }) {
   const [items, setItems] = useState([]);
   const [userMap, setUserMap] = useState({});
   const [queryText, setQueryText] = useState("");
   const [cat, setCat] = useState("すべて");
   const [loading, setLoading] = useState(true);
+
+  // =============================
+  // 投稿クリック → DMを開く
+  // =============================
+  const handleOpenDM = (post) => {
+    if (!post.ownerUid || !post.id) return;
+    if (post.ownerUid === user?.uid) return;
+    onOpenDM(post.ownerUid, post.id);
+  };
 
   // =============================
   // postsLend + postsBorrow 取得
@@ -28,7 +37,7 @@ export default function PostsPage() {
     const updateItems = async () => {
       const all = [...lendPosts, ...borrowPosts];
 
-      // ===== 投稿者 uid を収集 =====
+      // 投稿者 uid を収集
       const uids = [...new Set(all.map((p) => p.ownerUid).filter(Boolean))];
 
       const users = {};
@@ -40,7 +49,7 @@ export default function PostsPage() {
       );
       setUserMap(users);
 
-      // ===== 表示用データに整形 =====
+      // 表示用データ
       const list = all
         .sort(
           (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
@@ -48,14 +57,12 @@ export default function PostsPage() {
         .map((p) => ({
           id: p.id,
           title: p.title,
-          kind: p.kind, // lend / borrow
+          kind: p.kind,
           badge: p.kind === "lend" ? "貸す" : "借る",
           category: p.kind === "lend" ? "貸したい" : "借りたい",
           status:
             p.kind === "lend" ? (p.free ? "無料" : "募集中") : "借りたいです",
           ownerUid: p.ownerUid,
-          image:
-            "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop",
           image: p.imageUrl || "/no-image.png",
         }));
 
@@ -63,7 +70,6 @@ export default function PostsPage() {
       setLoading(false);
     };
 
-    // ===== postsLend =====
     const unsubLend = onSnapshot(
       query(collection(db, "postsLend"), orderBy("createdAt", "desc")),
       (snap) => {
@@ -76,7 +82,6 @@ export default function PostsPage() {
       }
     );
 
-    // ===== postsBorrow =====
     const unsubBorrow = onSnapshot(
       query(collection(db, "postsBorrow"), orderBy("createdAt", "desc")),
       (snap) => {
@@ -113,7 +118,7 @@ export default function PostsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-      {/* ================= 検索 ================= */}
+      {/* 検索 */}
       <SectionCard title="検索 / フィルター">
         <div className="flex flex-col md:flex-row gap-3">
           <input
@@ -134,7 +139,7 @@ export default function PostsPage() {
         </div>
       </SectionCard>
 
-      {/* ================= 掲示板 ================= */}
+      {/* 掲示板 */}
       <SectionCard title="掲示板">
         {loading && (
           <div className="text-center py-10 text-gray-500">読み込み中...</div>
@@ -144,10 +149,10 @@ export default function PostsPage() {
           {filtered.map((it) => (
             <div
               key={it.id}
-              className={`relative bg-white rounded-2xl overflow-hidden shadow-sm ring-1
+              onClick={() => handleOpenDM(it)}
+              className={`relative cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm ring-1
                 ${it.kind === "lend" ? "ring-indigo-200" : "ring-orange-200"}`}
             >
-              {/* 貸す / 借る バッジ */}
               <div
                 className={`absolute top-2 left-2 z-10 rounded-full px-3 py-1 text-xs font-bold text-white
                   ${it.kind === "lend" ? "bg-indigo-600" : "bg-orange-500"}`}
@@ -176,10 +181,9 @@ export default function PostsPage() {
                 </div>
 
                 <div
-                  className={`text-sm font-medium
-                    ${
-                      it.kind === "lend" ? "text-indigo-600" : "text-orange-600"
-                    }`}
+                  className={`text-sm font-medium ${
+                    it.kind === "lend" ? "text-indigo-600" : "text-orange-600"
+                  }`}
                 >
                   {it.category}
                 </div>
