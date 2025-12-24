@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { judgeTenSecondsPoint } from "../../lib/point";
 
 export default function TenSecondGame() {
   const [message, setMessage] = useState(""); // 判定メッセージ
@@ -6,7 +7,7 @@ export default function TenSecondGame() {
   const [elapsedTime, setElapsedTime] = useState(null); // 経過時間
   const timerRef = useRef(null);
   const startTimeRef = useRef(0);
-
+  const [point, setPoint] = useState(0);
   const startGame = () => {
     setMessage("");
     setElapsedTime(null);
@@ -23,17 +24,13 @@ export default function TenSecondGame() {
       setIsPlaying(false);
 
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
-      const rounded = elapsed.toFixed(2);
-      setElapsedTime(rounded); // 経過時間を保存
+      const rounded = Number(elapsed.toFixed(2));
+      setElapsedTime(rounded);
 
-      // 判定
-      if (Math.abs(elapsed - 10) < 0.01) {
-        setMessage("クリア！");
-      } else if (Math.abs(elapsed - 10) <= 0.5) {
-        setMessage("ニアピン！");
-      } else {
-        setMessage("失敗…");
-      }
+      // 🔽 ここが新しい判定
+      const result = judgeTenSecondsPoint(rounded);
+      setMessage(result.label);
+      setPoint(result.point);
     }
   };
 
@@ -43,7 +40,6 @@ export default function TenSecondGame() {
         <button
           className="px-4 py-2 rounded-xl bg-indigo-600 text-white"
           onClick={startGame}
-          style={{ padding: "10px 20px", fontSize: "16px" }}
         >
           スタート
         </button>
@@ -53,7 +49,6 @@ export default function TenSecondGame() {
         <button
           className="px-4 py-2 rounded-xl bg-red-600 text-white"
           onClick={stopGame}
-          style={{ padding: "10px 20px", fontSize: "16px" }}
         >
           ストップ
         </button>
@@ -67,7 +62,13 @@ export default function TenSecondGame() {
         </div>
       )}
 
+      {/* 既存 */}
       {message && <h2 style={{ marginTop: "20px" }}>{message}</h2>}
+
+      {/* 🔽 ここを追加 */}
+      {point > 0 && (
+        <p style={{ fontSize: "24px", marginTop: "10px" }}>+{point} pt</p>
+      )}
     </div>
   );
 }

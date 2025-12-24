@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-
 export default function TenSecondClicker({ user, board, setBoard }) {
   const [phase, setPhase] = useState("ready"); // ready | count | play | done
   const [countdown, setCountdown] = useState(3);
