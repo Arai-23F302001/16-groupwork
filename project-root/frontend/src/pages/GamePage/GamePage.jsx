@@ -3,7 +3,6 @@ import { SectionCard } from "../../components/Ui";
 import CookieClicker from "./CookieClicker";
 import TenSecondClicker from "./TenSecondClicker";
 import TenSecondStop from "./TenSecondStop";
-import React from "react";
 import { doc, updateDoc, increment, setDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 
