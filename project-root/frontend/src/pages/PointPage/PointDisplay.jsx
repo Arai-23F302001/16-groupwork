@@ -1,17 +1,56 @@
 import React, { useState, useEffect } from "react";
 import { Coins, Gift, ShoppingBag, Check, X } from "lucide-react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase";
+import { consumePoints } from "../../lib/pointRepository";
+import ExchangeConfirmModal from "./ExchangeConfirmModal";
 
 export default function PointExchangePage({ user }) {
-  // 現在のポイント（ダミーデータ、実際はAPIから取得）
-  const [currentPoints, setCurrentPoints] = useState(1500);
+  // =============================
+  // リアルタイムポイント取得
+  // =============================
+  const [currentPoints, setCurrentPoints] = useState(0);
+  const [isLoadingPoints, setIsLoadingPoints] = useState(true);
 
+  useEffect(() => {
+    if (!user) {
+      setCurrentPoints(0);
+      setIsLoadingPoints(false);
+      return;
+    }
+
+    const userRef = doc(db, "users", user.uid);
+    const unsubscribe = onSnapshot(
+      userRef,
+      (snap) => {
+        if (snap.exists()) {
+          setCurrentPoints(snap.data().points ?? 0);
+        } else {
+          setCurrentPoints(0);
+        }
+        setIsLoadingPoints(false);
+      },
+      (error) => {
+        console.error("❌ ポイント取得エラー:", error);
+        setIsLoadingPoints(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // =============================
   // 交換モーダルの状態
+  // =============================
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [exchangeSuccess, setExchangeSuccess] = useState(false);
+  const [isExchanging, setIsExchanging] = useState(false);
 
-  // 交換可能な商品リスト（実際はAPIから取得）
-  const [items, setItems] = useState([
+  // =============================
+  // 交換可能な商品リスト（拡充版）
+  // =============================
+  const items = [
     {
       id: 1,
       name: "スターバックスカード 500円分",
@@ -66,9 +105,65 @@ export default function PointExchangePage({ user }) {
       category: "その他",
       stock: 25,
     },
-  ]);
+    {
+      id: 7,
+      name: "ミスタードーナツ 500円分",
+      points: 480,
+      image:
+        "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop",
+      category: "食事",
+      stock: 18,
+    },
+    {
+      id: 8,
+      name: "Netflixギフトカード 1500円分",
+      points: 1500,
+      image:
+        "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400&h=300&fit=crop",
+      category: "エンタメ",
+      stock: 5,
+    },
+    {
+      id: 9,
+      name: "サーティワン 500円分",
+      points: 480,
+      image:
+        "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop",
+      category: "デザート",
+      stock: 14,
+    },
+    {
+      id: 10,
+      name: "カラオケ1時間無料券",
+      points: 600,
+      image:
+        "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&h=300&fit=crop",
+      category: "エンタメ",
+      stock: 7,
+    },
+    {
+      id: 11,
+      name: "映画館チケット",
+      points: 1800,
+      image:
+        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=300&fit=crop",
+      category: "エンタメ",
+      stock: 6,
+    },
+    {
+      id: 12,
+      name: "QUOカード 500円分",
+      points: 500,
+      image:
+        "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop",
+      category: "ギフト券",
+      stock: 30,
+    },
+  ];
 
+  // =============================
   // 交換確認モーダルを開く
+  // =============================
   const openExchangeModal = (item) => {
     if (currentPoints >= item.points) {
       setSelectedItem(item);
@@ -76,31 +171,59 @@ export default function PointExchangePage({ user }) {
     }
   };
 
-  // 交換処理
+  // =============================
+  // 交換処理（Firestore Transaction）
+  // =============================
+
   const handleExchange = async () => {
-    if (!selectedItem) return;
+    if (!selectedItem || !user || isExchanging) return;
 
-    // 実際はここでAPIリクエストを送信
-    // await fetch('/api/points/exchange', { method: 'POST', body: JSON.stringify({ itemId: selectedItem.id }) });
+    setIsExchanging(true);
 
-    // ポイントを減算
-    setCurrentPoints(currentPoints - selectedItem.points);
+    try {
+      await consumePoints({
+        userId: user.uid,
+        costPoints: selectedItem.points,
+        exchangeItem: selectedItem,
+      });
 
-    // 成功表示
-    setExchangeSuccess(true);
+      setExchangeSuccess(true);
 
-    // モーダルを閉じる
-    setTimeout(() => {
-      setShowModal(false);
-      setExchangeSuccess(false);
-      setSelectedItem(null);
-    }, 2000);
+      setTimeout(() => {
+        setShowModal(false);
+        setExchangeSuccess(false);
+        setSelectedItem(null);
+        setIsExchanging(false);
+      }, 2000);
+    } catch (error) {
+      console.error("❌ 交換エラー:", error);
+      alert(error.message || "交換に失敗しました");
+      setIsExchanging(false);
+    }
   };
+
+  // =============================
+  // ローディング中
+  // =============================
+  if (isLoadingPoints) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">
+            ポイント情報を読み込み中...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* ポイント残高表示 */}
+        {/* =============================
+            ポイント残高表示
+        ============================== */}
         <div className="mb-8">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 p-8 text-white">
@@ -130,7 +253,9 @@ export default function PointExchangePage({ user }) {
           </div>
         </div>
 
-        {/* 商品一覧 */}
+        {/* =============================
+            商品一覧
+        ============================== */}
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
             <ShoppingBag className="w-7 h-7 text-purple-600" />
@@ -207,89 +332,18 @@ export default function PointExchangePage({ user }) {
           </div>
         </div>
       </div>
-
-      {/* 交換確認モーダル */}
-      {showModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
-            {exchangeSuccess ? (
-              // 成功画面
-              <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Check className="w-12 h-12 text-green-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  交換完了！
-                </h3>
-                <p className="text-gray-600">
-                  {selectedItem.name}と交換しました
-                </p>
-              </div>
-            ) : (
-              // 確認画面
-              <>
-                <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
-                  <h3 className="text-2xl font-bold">交換確認</h3>
-                </div>
-
-                <div className="p-6">
-                  <div className="mb-6">
-                    <img
-                      src={selectedItem.image}
-                      alt={selectedItem.name}
-                      className="w-full h-48 object-cover rounded-xl mb-4"
-                    />
-                    <h4 className="font-bold text-xl text-gray-800 mb-2">
-                      {selectedItem.name}
-                    </h4>
-                    <p className="text-gray-600 text-sm">
-                      この商品と交換しますか？
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">必要ポイント</span>
-                      <span className="font-bold text-purple-600">
-                        {selectedItem.points} pt
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">現在のポイント</span>
-                      <span className="font-bold">{currentPoints} pt</span>
-                    </div>
-                    <div className="border-t border-gray-200 pt-2 mt-2"></div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">交換後のポイント</span>
-                      <span className="font-bold text-blue-600">
-                        {currentPoints - selectedItem.points} pt
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        setShowModal(false);
-                        setSelectedItem(null);
-                      }}
-                      className="flex-1 py-3 rounded-xl border-2 border-gray-300 font-semibold text-gray-700 hover:bg-gray-50 transition"
-                    >
-                      キャンセル
-                    </button>
-                    <button
-                      onClick={handleExchange}
-                      className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:from-purple-700 hover:to-pink-700 transition shadow-lg"
-                    >
-                      交換する
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <ExchangeConfirmModal
+        open={showModal}
+        selectedItem={selectedItem}
+        currentPoints={currentPoints}
+        isExchanging={isExchanging}
+        exchangeSuccess={exchangeSuccess}
+        onCancel={() => {
+          setShowModal(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleExchange}
+      />
     </div>
   );
 }
