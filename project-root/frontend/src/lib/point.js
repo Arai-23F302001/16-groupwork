@@ -3,22 +3,22 @@ export function judgeTenSecondStopPoint(time) {
   const diff = Math.abs(time - 10);
 
   if (diff === 0) {
-    return { label: "ぴったり章", point: 100 };
+    return { label: "ぴったり章", points: 100 };
   }
   if (diff <= 0.1) {
-    return { label: "くそ惜しいでしょう", point: 50 };
+    return { label: "くそ惜しいでしょう", points: 50 };
   }
   if (diff <= 0.5) {
-    return { label: "ニアピン章", point: 5 };
+    return { label: "ニアピン章", points: 5 };
   }
   if (diff <= 1.0) {
-    return { label: "惜しかったでしょう", point: 3 };
+    return { label: "惜しかったでしょう", points: 3 };
   }
   if (diff <= 2.0) {
-    return { label: "参加賞", point: 1 };
+    return { label: "参加賞", points: 1 };
   }
 
-  return { label: "残念", point: 0 };
+  return { label: "残念", points: 0 };
 }
   // ポイント計算（Firebase・集計用）
 export function calcTenSecondsPoint(time) {
@@ -70,11 +70,19 @@ export function calcRenderGamePoint(clickCount) {
   const ratio =
     (clickCount - minClicks) / (maxClicks - minClicks);
 
-  const point =
+  const points =
     minPoint + ratio * (maxPoint - minPoint);
 
   // 小数点は切り捨て（好みで round にしてもOK）
-  return Math.floor(point);
+  return Math.floor(points);
+}
+
+// 現在のポイントに加算（共通ルール）
+export function addPoint(currentPoint, earnedPoint) {
+  if (typeof currentPoint !== "number") return earnedPoint;
+  if (typeof earnedPoint !== "number") return currentPoint;
+
+  return currentPoint + earnedPoint;
 }
 
 

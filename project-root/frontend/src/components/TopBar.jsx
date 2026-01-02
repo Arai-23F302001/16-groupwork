@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "../firebase"; // パスは適宜調整
 
 export default function TopBar({
   current,
@@ -11,12 +13,12 @@ export default function TopBar({
   const tabs = [
     { key: "posts", label: "掲示板" },
     { key: "game", label: "ミニゲーム" },
-    { key: "messages", label: "メッセージ" }, // ★ DM一覧
+    { key: "messages", label: "メッセージ" },
     {
       key: "point",
       label: "ポイント管理",
       submenu: [
-        { key: "point-current", label: "現在のポイント" },
+        { key: "point-current", label: "現在のポイント", disabled: true }, // ★ リンク無効化
         { key: "point-history", label: "履歴" },
         { key: "point-exchange", label: "交換" },
       ],
@@ -40,12 +42,46 @@ export default function TopBar({
   ];
 
   // =============================
-  // ダミーポイント
+  // リアルタイムポイント取得
   // =============================
-  const [point, setPoint] = useState(null);
+  const [points, setPoints] = useState(null);
+  const [isLoadingPoints, setIsLoadingPoints] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => setPoint(500000), 800);
+    let unsubSnap = null;
+
+    const unsubAuth = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        setPoints(null);
+        setIsLoadingPoints(false);
+        if (unsubSnap) unsubSnap();
+        return;
+      }
+
+      setIsLoadingPoints(true);
+      const userRef = doc(db, "users", user.uid);
+
+      unsubSnap = onSnapshot(
+        userRef,
+        (snap) => {
+          if (snap.exists()) {
+            setPoints(snap.data().points ?? 0);
+          } else {
+            setPoints(0);
+          }
+          setIsLoadingPoints(false);
+        },
+        (error) => {
+          console.error("❌ ポイント取得エラー:", error);
+          setIsLoadingPoints(false);
+        }
+      );
+    });
+
+    return () => {
+      unsubAuth();
+      if (unsubSnap) unsubSnap();
+    };
   }, []);
 
   // =============================
@@ -79,7 +115,6 @@ export default function TopBar({
       <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-3">
         <div className="w-32 font-bold">Campus Share</div>
 
-        {/* ★ tabs が6個なので grid-cols-6 */}
         <nav className="flex-1 grid grid-cols-6 gap-4">
           {tabs.map((t) => (
             <button
@@ -165,7 +200,6 @@ export default function TopBar({
         <div className="max-w-6xl mx-auto px-6 py-8 flex text-sm">
           <div className="w-32" />
 
-          {/* ★ MegaMenu も6列 */}
           <div className="flex-1 grid grid-cols-6 gap-6">
             {tabs.map((t, idx) => (
               <div
@@ -183,28 +217,53 @@ export default function TopBar({
 
                   {t.submenu && (
                     <div className="space-y-2">
-                      {t.submenu.map((item) => (
-                        <div
-                          key={item.key}
-                          className="cursor-pointer text-gray-600 hover:text-indigo-600"
-                          onClick={() => {
-                            if (!user) {
-                              alert("ログインしてください");
-                              onGoAuth();
-                              return;
-                            }
-                            onTab(item.key);
-                            setMegaOpen(false);
-                          }}
-                        >
-                          {item.label}
-                          {item.key === "point-current" && point && (
-                            <span className="ml-2 text-xs text-gray-500">
-                              （{point.toLocaleString()} pt）
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                      {t.submenu.map((item) => {
+                        // ★ ポイント表示の特別UI
+                        if (item.key === "point-current") {
+                          return (
+                            <div key={item.key} className="pointer-events-none">
+                              <div className="rounded-lg px-4 py-3 shadow-md">
+                                <div className="text-xs opacity-90 mb-1">
+                                  現在
+                                </div>
+                                <div className="text-xl font-bold">
+                                  {isLoadingPoints ? (
+                                    <span className="text-base">読込中...</span>
+                                  ) : points !== null ? (
+                                    `${points.toLocaleString()} pt`
+                                  ) : (
+                                    <span className="text-base">--</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // ★ 通常のメニューアイテム
+                        return (
+                          <div
+                            key={item.key}
+                            className={`cursor-pointer text-gray-600 hover:text-indigo-600 ${
+                              item.disabled
+                                ? "opacity-50 pointer-events-none"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              if (item.disabled) return;
+                              if (!user) {
+                                alert("ログインしてください");
+                                onGoAuth();
+                                return;
+                              }
+                              onTab(item.key);
+                              setMegaOpen(false);
+                            }}
+                          >
+                            {item.label}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

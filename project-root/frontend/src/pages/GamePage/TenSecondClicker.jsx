@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { calcRenderGamePoint } from "../../lib/point";
+import { addPointToUser } from "../../lib/pointRepository";
+import { auth } from "../../firebase";
+
 export default function TenSecondClicker({ user, board, setBoard }) {
   const [phase, setPhase] = useState("ready"); // ready | count | play | done
   const [countdown, setCountdown] = useState(3);
@@ -23,30 +27,50 @@ export default function TenSecondClicker({ user, board, setBoard }) {
 
   useEffect(() => {
     if (phase !== "play") return;
+
     setTimeLeft(10);
     const t = setInterval(() => {
       setTimeLeft((s) => {
         if (s <= 1) {
           clearInterval(t);
           setPhase("done");
-          const entry = { name: user?.name || "ゲスト", score, ts: Date.now() };
-          const next = [...board, entry]
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 10);
-          setBoard(next);
-          localStorage.setItem("game-board", JSON.stringify(next));
           return 0;
         }
         return s - 1;
       });
     }, 1000);
+
     return () => clearInterval(t);
-  }, [phase]); // eslint-disable-line
+  }, [phase]);
 
   function start() {
     setScore(0);
     setPhase("count");
   }
+  useEffect(() => {
+    if (phase !== "done") return;
+
+    const points = calcRenderGamePoint(score);
+
+    if (points > 0 && auth.currentUser) {
+      addPointToUser(auth.currentUser.uid, points, "tenSecondClicker").catch(
+        console.error
+      );
+    }
+
+    const entry = {
+      name: user?.name || "ゲスト",
+      score,
+      ts: Date.now(),
+    };
+
+    const next = [...board, entry]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+
+    setBoard(next);
+    localStorage.setItem("game-board", JSON.stringify(next));
+  }, [phase]); // eslint-disable-line
 
   return (
     <div className="flex flex-col items-center gap-4 py-4">

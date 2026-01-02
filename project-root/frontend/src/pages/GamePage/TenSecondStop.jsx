@@ -1,13 +1,15 @@
 import React, { useState, useRef } from "react";
-import { judgeTenSecondsPoint } from "../../lib/point";
+import { judgeTenSecondStopPoint } from "../../lib/point";
+import { addPointToUser } from "../../lib/pointRepository";
+import { auth } from "../../firebase";
 
-export default function TenSecondGame() {
+export default function TenSecondGame({ onFinish }) {
   const [message, setMessage] = useState(""); // 判定メッセージ
   const [isPlaying, setIsPlaying] = useState(false); // ゲーム中か
   const [elapsedTime, setElapsedTime] = useState(null); // 経過時間
   const timerRef = useRef(null);
   const startTimeRef = useRef(0);
-  const [point, setPoint] = useState(0);
+  const [points, setPoint] = useState(0);
   const startGame = () => {
     setMessage("");
     setElapsedTime(null);
@@ -27,10 +29,19 @@ export default function TenSecondGame() {
       const rounded = Number(elapsed.toFixed(2));
       setElapsedTime(rounded);
 
-      // 🔽 ここが新しい判定
-      const result = judgeTenSecondsPoint(rounded);
-      setMessage(result.label);
-      setPoint(result.point);
+      const result = judgeTenSecondStopPoint(rounded);
+      setMessage(result.labl);
+      setPoint(result.points);
+      if (result.point > 0) {
+        onFinish(result.point, "tenSecondStop");
+      }
+      if (result.points > 0 && auth.currentUser) {
+        addPointToUser(
+          auth.currentUser.uid,
+          result.points,
+          "tenSecondStop"
+        ).catch(console.error);
+      }
     }
   };
 
@@ -66,8 +77,8 @@ export default function TenSecondGame() {
       {message && <h2 style={{ marginTop: "20px" }}>{message}</h2>}
 
       {/* 🔽 ここを追加 */}
-      {point > 0 && (
-        <p style={{ fontSize: "24px", marginTop: "10px" }}>+{point} pt</p>
+      {points > 0 && (
+        <p style={{ fontSize: "24px", marginTop: "10px" }}>+{points} pt</p>
       )}
     </div>
   );

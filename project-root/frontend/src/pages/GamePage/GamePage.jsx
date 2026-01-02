@@ -3,82 +3,64 @@ import { SectionCard } from "../../components/Ui";
 import CookieClicker from "./CookieClicker";
 import TenSecondClicker from "./TenSecondClicker";
 import TenSecondStop from "./TenSecondStop";
-import { doc, updateDoc, increment, setDoc, getDoc } from "firebase/firestore";
-import { db, auth } from "../../firebase";
+import { addPointToUser } from "../../lib/pointRepository";
+import { auth } from "../../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase";
 
 export default function GamePage({ user }) {
-  const [board, setBoard] = useState(() => {
-    const raw = localStorage.getItem("game-board");
-    return raw ? JSON.parse(raw) : [];
-  });
-
   const [isSaving, setIsSaving] = useState(false);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [board, setBoard] = useState([]);
 
-  // 初回マウント時にFirebaseから現在のポイントを取得
   useEffect(() => {
-    const fetchUserPoints = async () => {
-      if (!auth.currentUser) return;
+    let unsubSnap = null;
 
-      try {
-        const userId = auth.currentUser.uid;
-        const userRef = doc(db, "users", userId);
-        const userDoc = await getDoc(userRef);
-
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setTotalPoints(data.points || 0);
-        }
-      } catch (error) {
-        console.error("ポイント取得エラー:", error);
+    const unsubAuth = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        setTotalPoints(0);
+        if (unsubSnap) unsubSnap();
+        return;
       }
-    };
 
-    fetchUserPoints();
+      const userRef = doc(db, "users", user.uid);
+
+      unsubSnap = onSnapshot(userRef, (snap) => {
+        if (snap.exists()) {
+          setTotalPoints(snap.data().points ?? 0);
+        }
+      });
+    });
+
+    return () => {
+      unsubAuth();
+      if (unsubSnap) unsubSnap();
+    };
   }, []);
 
-  // ランクアップ時のFirebase保存処理
-  const handleRankUp = async (points, rankLabel) => {
-    if (!auth.currentUser) {
-      console.error("ユーザーがログインしていません");
-      return;
-    }
+  //ポイント計算
+  const handleGameResult = async (points, gameType) => {
+    if (!auth.currentUser || points <= 0) return;
 
     setIsSaving(true);
     try {
-      const userId = auth.currentUser.uid;
-      const userRef = doc(db, "users", userId);
+      await addPointToUser(auth.currentUser.uid, points, gameType);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-      // ドキュメントが存在するか確認
-      const userDoc = await getDoc(userRef);
+  const handleRankUp = async (points, rankLabel) => {
+    if (!auth.currentUser) return;
 
-      if (!userDoc.exists()) {
-        // 新規ユーザーの場合、ドキュメントを作成
-        await setDoc(userRef, {
-          points: points,
-          lastRank: rankLabel,
-          lastUpdated: new Date(),
-          email: auth.currentUser.email,
-          displayName: auth.currentUser.displayName || "Anonymous",
-        });
-      } else {
-        // 既存ユーザーの場合、ポイントを加算
-        await updateDoc(userRef, {
-          points: increment(points),
-          lastRank: rankLabel,
-          lastUpdated: new Date(),
-        });
-      }
-
-      // ローカルの表示も更新
-      setTotalPoints((prev) => prev + points);
-
-      console.log(
-        `✅ ${points}ポイントをFirebaseに保存しました (${rankLabel})`
-      );
+    setIsSaving(true);
+    try {
+      await addPointToUser(auth.currentUser.uid, points, "cookieClicker");
     } catch (error) {
-      console.error("❌ Firebase保存エラー:", error);
-      alert("ポイントの保存に失敗しました。もう一度お試しください。");
+      console.error("❌ ポイント保存エラー:", error);
+      alert("ポイントの保存に失敗しました。");
     } finally {
       setIsSaving(false);
     }
@@ -103,7 +85,7 @@ export default function GamePage({ user }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SectionCard title="10秒ぴったり押し">
-          <TenSecondStop />
+          <TenSecondStop onFinish={handleGameResult} />
         </SectionCard>
 
         <SectionCard
@@ -112,7 +94,12 @@ export default function GamePage({ user }) {
             <span className="text-sm text-gray-500">トップ10を目指そう</span>
           }
         >
-          <TenSecondClicker user={user} board={board} setBoard={setBoard} />
+          <TenSecondClicker
+            user={user}
+            board={board}
+            setBoard={setBoard}
+            onFinish={handleGameResult}
+          />
         </SectionCard>
 
         <SectionCard title="クッキー・クラッカー">

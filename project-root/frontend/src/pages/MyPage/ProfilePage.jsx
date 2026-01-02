@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { User, Camera, Eye, EyeOff, Check } from "lucide-react";
 import { auth, db } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import imageCompression from "browser-image-compression";
 
 export default function ProfileSettings() {
@@ -35,27 +35,37 @@ export default function ProfileSettings() {
 
   // ===== ログイン中ユーザーの情報 & ポイント取得 =====
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (!user) return;
 
       setCurrentUserId(user.uid);
-      const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
 
-      if (snap.exists()) {
-        const data = snap.data();
-        setProfile((prev) => ({
-          ...prev,
-          name: data.name ?? "",
-          email: user.email ?? "",
-          bio: data.bio ?? "",
-          avatar: data.avatarUrl ?? null, // Cloudinaryから取得したURL
-        }));
-        setPoints(data.points ?? 0);
-      }
+      const userRef = doc(db, "users", user.uid);
+
+      // 🔥 ここがリアルタイム監視
+      const unsubscribeSnapshot = onSnapshot(userRef, (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+
+          setProfile((prev) => ({
+            ...prev,
+            name: data.name ?? "",
+            email: user.email ?? "",
+            bio: data.bio ?? "",
+            avatar: data.avatarUrl ?? null,
+          }));
+
+          // ⭐ ポイントがリアルタイムで反映される
+          setPoints(data.points ?? 0);
+        }
+      });
+
+      // Firestore監視解除
+      return () => unsubscribeSnapshot();
     });
 
-    return () => unsubscribe();
+    // Auth監視解除
+    return () => unsubscribeAuth();
   }, []);
 
   // 🖼️ 画像を圧縮
