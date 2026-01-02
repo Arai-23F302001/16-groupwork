@@ -4,6 +4,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase";
 import { consumePoints } from "../../lib/pointRepository";
 import ExchangeConfirmModal from "./ExchangeConfirmModal";
+import { exchangeItems } from "../../assets/exchangeItem.js";
 
 export default function PointExchangePage({ user }) {
   // =============================
@@ -48,123 +49,13 @@ export default function PointExchangePage({ user }) {
   const [isExchanging, setIsExchanging] = useState(false);
 
   // =============================
-  // 交換可能な商品リスト（拡充版）
-  // =============================
-  const items = [
-    {
-      id: 1,
-      name: "スターバックスカード 500円分",
-      points: 500,
-      image:
-        "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop",
-      category: "ドリンク",
-      stock: 10,
-    },
-    {
-      id: 2,
-      name: "Amazonギフト券 1000円分",
-      points: 1000,
-      image:
-        "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=400&h=300&fit=crop",
-      category: "ギフト券",
-      stock: 20,
-    },
-    {
-      id: 3,
-      name: "学食無料券",
-      points: 300,
-      image:
-        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop",
-      category: "食事",
-      stock: 15,
-    },
-    {
-      id: 4,
-      name: "図書カード 500円分",
-      points: 500,
-      image:
-        "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop",
-      category: "書籍",
-      stock: 8,
-    },
-    {
-      id: 5,
-      name: "マクドナルド 500円セット",
-      points: 450,
-      image:
-        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",
-      category: "食事",
-      stock: 12,
-    },
-    {
-      id: 6,
-      name: "コンビニ商品券 300円分",
-      points: 300,
-      image:
-        "https://images.unsplash.com/photo-1555529902-5261145633bf?w=400&h=300&fit=crop",
-      category: "その他",
-      stock: 25,
-    },
-    {
-      id: 7,
-      name: "ミスタードーナツ 500円分",
-      points: 480,
-      image:
-        "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop",
-      category: "食事",
-      stock: 18,
-    },
-    {
-      id: 8,
-      name: "Netflixギフトカード 1500円分",
-      points: 1500,
-      image:
-        "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400&h=300&fit=crop",
-      category: "エンタメ",
-      stock: 5,
-    },
-    {
-      id: 9,
-      name: "サーティワン 500円分",
-      points: 480,
-      image:
-        "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop",
-      category: "デザート",
-      stock: 14,
-    },
-    {
-      id: 10,
-      name: "カラオケ1時間無料券",
-      points: 600,
-      image:
-        "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&h=300&fit=crop",
-      category: "エンタメ",
-      stock: 7,
-    },
-    {
-      id: 11,
-      name: "映画館チケット",
-      points: 1800,
-      image:
-        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=300&fit=crop",
-      category: "エンタメ",
-      stock: 6,
-    },
-    {
-      id: 12,
-      name: "QUOカード 500円分",
-      points: 500,
-      image:
-        "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop",
-      category: "ギフト券",
-      stock: 30,
-    },
-  ];
-
-  // =============================
   // 交換確認モーダルを開く
   // =============================
+  // 交換確認モーダルを開く
   const openExchangeModal = (item) => {
+    if (!item) return;
+
+    // ポイントが足りるか確認
     if (currentPoints >= item.points) {
       setSelectedItem(item);
       setShowModal(true);
@@ -184,7 +75,7 @@ export default function PointExchangePage({ user }) {
       await consumePoints({
         userId: user.uid,
         costPoints: selectedItem.points,
-        exchangeItem: selectedItem,
+        exchangeItems: selectedItem,
       });
 
       setExchangeSuccess(true);
@@ -263,12 +154,12 @@ export default function PointExchangePage({ user }) {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map((item) => {
-              const canExchange = currentPoints >= item.points;
+            {exchangeItems.map((exchangeItems) => {
+              const canExchange = currentPoints >= exchangeItems.points;
 
               return (
                 <div
-                  key={item.id}
+                  key={exchangeItems.id}
                   className={`bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl ${
                     !canExchange ? "opacity-60" : ""
                   }`}
@@ -276,8 +167,8 @@ export default function PointExchangePage({ user }) {
                   {/* 商品画像 */}
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={item.image}
-                      alt={item.name}
+                      src={exchangeItems.image}
+                      alt={exchangeItems.name}
                       className="w-full h-full object-cover"
                     />
                     {!canExchange && (
@@ -288,20 +179,20 @@ export default function PointExchangePage({ user }) {
                       </div>
                     )}
                     <div className="absolute top-3 left-3 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      {item.category}
+                      {exchangeItems.category}
                     </div>
                   </div>
 
                   {/* 商品情報 */}
                   <div className="p-5">
                     <h3 className="font-bold text-gray-800 mb-3 text-lg h-14 line-clamp-2">
-                      {item.name}
+                      {exchangeItems.name}
                     </h3>
 
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-baseline gap-1">
                         <span className="text-3xl font-bold text-purple-600">
-                          {item.points}
+                          {exchangeItems.points}
                         </span>
                         <span className="text-sm font-semibold text-gray-500">
                           pt
@@ -309,13 +200,15 @@ export default function PointExchangePage({ user }) {
                       </div>
                       <div className="text-sm text-gray-500">
                         在庫:{" "}
-                        <span className="font-semibold">{item.stock}</span>
+                        <span className="font-semibold">
+                          {exchangeItems.stock}
+                        </span>
                       </div>
                     </div>
 
                     {/* 交換ボタン */}
                     <button
-                      onClick={() => openExchangeModal(item)}
+                      onClick={() => openExchangeModal(exchangeItems)}
                       disabled={!canExchange}
                       className={`w-full py-3 rounded-xl font-semibold transition-all transform ${
                         canExchange
