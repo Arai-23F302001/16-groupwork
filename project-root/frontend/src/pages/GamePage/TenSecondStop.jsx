@@ -1,12 +1,15 @@
 import React, { useState, useRef } from "react";
+import { judgeTenSecondStopPoint } from "../../lib/point";
+import { addPointToUser } from "../../lib/pointRepository";
+import { auth } from "../../firebase";
 
-export default function TenSecondGame() {
+export default function TenSecondGame({ onFinish }) {
   const [message, setMessage] = useState(""); // 判定メッセージ
   const [isPlaying, setIsPlaying] = useState(false); // ゲーム中か
   const [elapsedTime, setElapsedTime] = useState(null); // 経過時間
   const timerRef = useRef(null);
   const startTimeRef = useRef(0);
-
+  const [points, setPoint] = useState(0);
   const startGame = () => {
     setMessage("");
     setElapsedTime(null);
@@ -23,16 +26,21 @@ export default function TenSecondGame() {
       setIsPlaying(false);
 
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
-      const rounded = elapsed.toFixed(2);
-      setElapsedTime(rounded); // 経過時間を保存
+      const rounded = Number(elapsed.toFixed(2));
+      setElapsedTime(rounded);
 
-      // 判定
-      if (Math.abs(elapsed - 10) < 0.01) {
-        setMessage("クリア！");
-      } else if (Math.abs(elapsed - 10) <= 0.5) {
-        setMessage("ニアピン！");
-      } else {
-        setMessage("失敗…");
+      const result = judgeTenSecondStopPoint(rounded);
+      setMessage(result.labl);
+      setPoint(result.points);
+      if (result.point > 0) {
+        onFinish(result.point, "tenSecondStop");
+      }
+      if (result.points > 0 && auth.currentUser) {
+        addPointToUser(
+          auth.currentUser.uid,
+          result.points,
+          "tenSecondStop"
+        ).catch(console.error);
       }
     }
   };
@@ -43,7 +51,6 @@ export default function TenSecondGame() {
         <button
           className="px-4 py-2 rounded-xl bg-indigo-600 text-white"
           onClick={startGame}
-          style={{ padding: "10px 20px", fontSize: "16px" }}
         >
           スタート
         </button>
@@ -53,7 +60,6 @@ export default function TenSecondGame() {
         <button
           className="px-4 py-2 rounded-xl bg-red-600 text-white"
           onClick={stopGame}
-          style={{ padding: "10px 20px", fontSize: "16px" }}
         >
           ストップ
         </button>
@@ -67,7 +73,13 @@ export default function TenSecondGame() {
         </div>
       )}
 
+      {/* 既存 */}
       {message && <h2 style={{ marginTop: "20px" }}>{message}</h2>}
+
+      {/* 🔽 ここを追加 */}
+      {points > 0 && (
+        <p style={{ fontSize: "24px", marginTop: "10px" }}>+{points} pt</p>
+      )}
     </div>
   );
 }

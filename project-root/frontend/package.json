@@ -9,11 +9,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.10.1",
     "firebase": "^10.7.0",
     "lucide-react": "^0.556.0"
+=======
+    "browser-image-compression": "^2.0.2",
+    "cloudinary": "^2.8.0",
+    "lucide-react": "^0.556.0",
+    "multer": "^2.0.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "^7.10.1"
+>>>>>>> main
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.3",
