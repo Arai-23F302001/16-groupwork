@@ -7,9 +7,6 @@ import ExchangeConfirmModal from "./ExchangeConfirmModal";
 import { exchangeItems } from "../../assets/exchangeItem.js";
 
 export default function PointExchangePage({ user }) {
-  // =============================
-  // リアルタイムポイント取得
-  // =============================
   const [currentPoints, setCurrentPoints] = useState(0);
   const [isLoadingPoints, setIsLoadingPoints] = useState(true);
 
@@ -40,17 +37,11 @@ export default function PointExchangePage({ user }) {
     return () => unsubscribe();
   }, [user]);
 
-  // =============================
-  // 交換モーダルの状態
-  // =============================
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [exchangeSuccess, setExchangeSuccess] = useState(false);
   const [isExchanging, setIsExchanging] = useState(false);
 
-  // =============================
-  // 交換確認モーダルを開く
-  // =============================
   // 交換確認モーダルを開く
   const openExchangeModal = (item) => {
     if (!item) return;
@@ -61,10 +52,6 @@ export default function PointExchangePage({ user }) {
       setShowModal(true);
     }
   };
-
-  // =============================
-  // 交換処理（Firestore Transaction）
-  // =============================
 
   const handleExchange = async () => {
     if (!selectedItem || !user || isExchanging) return;
@@ -93,9 +80,6 @@ export default function PointExchangePage({ user }) {
     }
   };
 
-  // =============================
-  // ローディング中
-  // =============================
   if (isLoadingPoints) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
@@ -112,9 +96,6 @@ export default function PointExchangePage({ user }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* =============================
-            ポイント残高表示
-        ============================== */}
         <div className="mb-8">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 p-8 text-white">
@@ -144,9 +125,6 @@ export default function PointExchangePage({ user }) {
           </div>
         </div>
 
-        {/* =============================
-            商品一覧
-        ============================== */}
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
             <ShoppingBag className="w-7 h-7 text-purple-600" />

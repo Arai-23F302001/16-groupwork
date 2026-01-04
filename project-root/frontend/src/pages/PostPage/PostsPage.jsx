@@ -18,18 +18,12 @@ export default function PostsPage({ onOpenDM, user }) {
   const [cat, setCat] = useState("すべて");
   const [loading, setLoading] = useState(true);
 
-  // =============================
-  // 投稿クリック → DMを開く
-  // =============================
   const handleOpenDM = (post) => {
     if (!post.ownerUid || !post.id) return;
     if (post.ownerUid === user?.uid) return;
     onOpenDM(post.ownerUid, post.id);
   };
 
-  // =============================
-  // postsLend + postsBorrow 取得
-  // =============================
   useEffect(() => {
     let lendPosts = [];
     let borrowPosts = [];
@@ -51,17 +45,14 @@ export default function PostsPage({ onOpenDM, user }) {
 
       // 表示用データ
       const list = all
-        .sort(
-          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
-        )
+        .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
         .map((p) => ({
           id: p.id,
           title: p.title,
           kind: p.kind,
           badge: p.kind === "lend" ? "貸す" : "借る",
           category: p.kind === "lend" ? "貸したい" : "借りたい",
-          status:
-            p.kind === "lend" ? (p.free ? "無料" : "募集中") : "借りたいです",
+          status: p.kind === "lend" ? (p.free ? "無料" : "募集中") : "借りたいです",
           ownerUid: p.ownerUid,
           image: p.imageUrl || "/no-image.png",
         }));
@@ -100,16 +91,11 @@ export default function PostsPage({ onOpenDM, user }) {
     };
   }, []);
 
-  // =============================
-  // 検索・フィルタ
-  // =============================
   const filtered = useMemo(() => {
     return items.filter((it) => {
       const ownerName = userMap[it.ownerUid] || "";
       const okQ = queryText
-        ? `${it.title}${it.category}${ownerName}`
-            .toLowerCase()
-            .includes(queryText.toLowerCase())
+        ? `${it.title}${it.category}${ownerName}`.toLowerCase().includes(queryText.toLowerCase())
         : true;
       const okC = cat === "すべて" ? true : it.category === cat;
       return okQ && okC;
@@ -141,9 +127,7 @@ export default function PostsPage({ onOpenDM, user }) {
 
       {/* 掲示板 */}
       <SectionCard title="掲示板">
-        {loading && (
-          <div className="text-center py-10 text-gray-500">読み込み中...</div>
-        )}
+        {loading && <div className="text-center py-10 text-gray-500">読み込み中...</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {filtered.map((it) => (
@@ -153,19 +137,16 @@ export default function PostsPage({ onOpenDM, user }) {
               className={`relative cursor-pointer bg-white rounded-2xl overflow-hidden shadow-sm ring-1
                 ${it.kind === "lend" ? "ring-indigo-200" : "ring-orange-200"}`}
             >
+              {/* ✅ z-10  遮罩虚化时也会被虚化 */}
               <div
-                className={`absolute top-2 left-2 z-10 rounded-full px-3 py-1 text-xs font-bold text-white
+                className={`absolute top-2 left-2 rounded-full px-3 py-1 text-xs font-bold text-white
                   ${it.kind === "lend" ? "bg-indigo-600" : "bg-orange-500"}`}
               >
                 {it.badge}
               </div>
 
               <div className="aspect-[4/3] bg-gray-100">
-                <img
-                  src={it.image}
-                  alt={it.title}
-                  className="w-full h-full object-cover"
-                />
+                <img src={it.image} alt={it.title} className="w-full h-full object-cover" />
               </div>
 
               <div className="p-4 space-y-2">
@@ -196,9 +177,7 @@ export default function PostsPage({ onOpenDM, user }) {
           ))}
 
           {!loading && filtered.length === 0 && (
-            <div className="col-span-full text-center text-gray-500 py-10">
-              投稿がありません
-            </div>
+            <div className="col-span-full text-center text-gray-500 py-10">投稿がありません</div>
           )}
         </div>
       </SectionCard>
