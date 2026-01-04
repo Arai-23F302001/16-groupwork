@@ -54,7 +54,7 @@ export default function PostsPage({ onOpenDM, user }) {
           category: p.kind === "lend" ? "貸したい" : "借りたい",
           status: p.kind === "lend" ? (p.free ? "無料" : "募集中") : "借りたいです",
           ownerUid: p.ownerUid,
-          image: p.imageUrl || "/no-image.png",
+          image: p.imageUrl || "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=800&auto=format&fit=crop",
         }));
 
       setItems(list);
