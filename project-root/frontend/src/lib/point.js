@@ -55,26 +55,7 @@ export function calcCookieClickerPoint(prevRank, nextRank) {
 
 // 10秒連打（レンダー）ゲームのポイント計算
 export function calcRenderGamePoint(clickCount) {
-  if (clickCount < 50) return 0;
-
-  // 50回〜100回を 5pt〜50pt に線形で割り当て
-  const minClicks = 50;
-  const maxClicks = 100;
-  const minPoint = 5;
-  const maxPoint = 50;
-
-  if (clickCount >= maxClicks) {
-    return maxPoint;
-  }
-
-  const ratio =
-    (clickCount - minClicks) / (maxClicks - minClicks);
-
-  const points =
-    minPoint + ratio * (maxPoint - minPoint);
-
-  // 小数点は切り捨て（好みで round にしてもOK）
-  return Math.floor(points);
+  return clickCount;
 }
 
 // 現在のポイントに加算（共通ルール）
